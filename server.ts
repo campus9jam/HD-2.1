@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -104,7 +105,7 @@ async function startServer() {
     app.get('*', async (req, res) => {
       try {
         const url = req.originalUrl;
-        let template = require('fs').readFileSync(path.join(__dirname, 'index.html'), 'utf-8');
+        let template = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf-8');
         template = await vite.transformIndexHtml(url, template);
         res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
       } catch (e) {
