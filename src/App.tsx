@@ -184,153 +184,163 @@ function AppContent() {
 
   return (
     <Router>
-      <AnimatePresence>
-        {!isLoaded && <SplashScreen onComplete={() => setIsLoaded(true)} />}
-      </AnimatePresence>
-
-      <div className="flex flex-col h-full bg-navy text-text relative select-none">
-        {/* Global Vignette */}
-        <div className="fixed inset-0 pointer-events-none z-50 bg-[radial-gradient(circle_at_50%_40%,transparent_0%,rgba(0,0,0,0.1)_100%)] mix-blend-multiply opacity-50 dark:opacity-100 dark:bg-[radial-gradient(circle_at_50%_40%,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
-        
-        {/* Persistent Top Bar */}
-        <header className="flex items-center justify-between px-6 py-8 z-40 bg-navy/80 backdrop-blur-xl border-b border-[var(--border)]">
-           <button className="p-2 text-text/30 hover:text-gold transition-colors">
-              <BridgeIcon className="w-6 h-6 text-gold" />
-           </button>
-           
-           <Link to="/" className="flex flex-col items-center group">
-              <span className="text-2xl font-serif text-text tracking-[0.2em] font-black leading-none mb-0.5">HD</span>
-              <span className="text-[7px] uppercase tracking-[0.6em] text-gold font-black opacity-80">WEAR YOU WORTH</span>
-           </Link>
-           
-           <div className="flex items-center gap-2">
-              <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-text/5 border border-[var(--border)] mr-2">
-                 <div className={`w-1 h-1 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
-                 <span className="text-[6px] font-black uppercase text-text/30 tracking-[0.1em]">
-                   {isOnline ? 'Sovereign_Link_Active' : 'Offline_Cache_Node'}
-                 </span>
-              </div>
-              <Link to="/search" className="p-2 text-text/40 hover:text-gold transition-colors">
-                 <Search className="w-5 h-5" />
-              </Link>
-              <ThemeToggle />
-           </div>
-        </header>
-
-        <OfflineNotice />
-        
-        <main className="flex-grow overflow-y-auto relative pb-32 no-scrollbar">
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/" element={<HomeView />} />
-              <Route path="/marketplace" element={<MarketplaceView />} />
-              <Route path="/shop" element={<ShopView />} />
-              <Route path="/login" element={<LoginView />} />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <ProfileView />
-                </ProtectedRoute>
-              } />
-              <Route path="/drops" element={<DropView />} />
-              <Route path="/heritage" element={<HeritageView />} />
-              <Route path="/community" element={<CommunityView />} />
-              <Route path="/cart" element={<CartView />} />
-              <Route path="/checkout" element={
-                <ProtectedRoute>
-                  <CheckoutView />
-                </ProtectedRoute>
-              } />
-              <Route path="/search" element={<SearchView />} />
-              <Route path="/saved" element={
-                <ProtectedRoute>
-                  <SavedItemsView />
-                </ProtectedRoute>
-              } />
-              <Route path="/orders" element={
-                <ProtectedRoute>
-                  <OrdersView />
-                </ProtectedRoute>
-              } />
-              <Route path="/rewards" element={
-                <ProtectedRoute>
-                  <RewardsView />
-                </ProtectedRoute>
-              } />
-              <Route path="/product/:id" element={<ProductDetailView />} />
-              <Route path="/vendor/dashboard" element={
-                <ProtectedRoute>
-                  <VendorDashboardView />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/dashboard" element={
-                <ProtectedRoute requireAdmin>
-                  <AdminDashboardView />
-                </ProtectedRoute>
-              } />
-              <Route path="/atelier" element={<AtelierPortalView />} />
-              <Route path="/atelier/order" element={
-                <ProtectedRoute>
-                  <AtelierOrderWizardView />
-                </ProtectedRoute>
-              } />
-              <Route path="/atelier/admin" element={
-                <ProtectedRoute requireAdmin>
-                  <AtelierAdminView />
-                </ProtectedRoute>
-              } />
-              <Route path="/governance" element={<GovernanceView />} />
-              <Route path="/neural" element={<LinguisticNodeView />} />
-            </Routes>
-          </AnimatePresence>
-
-          {/* Global Sovereign Footer */}
-          <footer className="mt-20 p-12 bg-surface/30 border-t border-[var(--border)] space-y-12">
-             <div className="flex flex-col md:flex-row justify-between gap-12">
-                <div className="space-y-6 max-w-xs">
-                   <div className="flex flex-col items-start gap-1">
-                      <span className="text-xl font-serif text-text tracking-[0.2em] font-black italic">Daraja Archive</span>
-                      <span className="text-[7px] uppercase tracking-[0.6em] text-gold font-black">Sovereign Media OS v.4.0</span>
-                   </div>
-                   <p className="text-[10px] text-text/30 leading-relaxed uppercase tracking-widest font-black">
-                      The official digital custodian of the House of Daraja. Chronicling the cultural narratives and artisanal legacies of the Sahel.
-                   </p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-12 sm:gap-24">
-                   <div className="space-y-4">
-                      <h4 className="text-[9px] uppercase font-black text-gold tracking-[0.4em]">Nodes</h4>
-                      <ul className="space-y-2 text-[10px] text-text/40 uppercase tracking-widest font-medium">
-                         <li className="hover:text-gold transition-colors cursor-pointer">Heritage Archive</li>
-                         <li className="hover:text-gold transition-colors cursor-pointer">Global Trade</li>
-                        <li><Link to="/neural" className="hover:text-gold transition-colors cursor-pointer">Neural Link</Link></li>
-                      </ul>
-                   </div>
-                   <div className="space-y-4">
-                      <h4 className="text-[9px] uppercase font-black text-gold tracking-[0.4em]">Protocol</h4>
-                      <ul className="space-y-2 text-[10px] text-text/40 uppercase tracking-widest font-medium">
-                         <li className="hover:text-gold transition-colors cursor-pointer">Privacy Handshake</li>
-                         <li className="hover:text-gold transition-colors cursor-pointer">Artifact Terms</li>
-                         <li className="hover:text-gold transition-colors cursor-pointer">Sovereign Ethics</li>
-                      </ul>
-                   </div>
-                </div>
-             </div>
+      <div className="relative h-full w-full bg-navy text-text overflow-hidden">
+        <AnimatePresence>
+          {!isLoaded && (
+            <SplashScreen 
+              key="splash" 
+              onComplete={() => setIsLoaded(true)} 
+            />
+          )}
+        </AnimatePresence>
+  
+        <div 
+          className={`flex flex-col h-full w-full bg-navy relative select-none ${isLoaded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          style={{ transition: 'opacity 1.2s cubic-bezier(0.23, 1, 0.32, 1)' }}
+        >
+          {/* Global Vignette */}
+          <div className="fixed inset-0 pointer-events-none z-40 bg-[radial-gradient(circle_at_50%_40%,transparent_0%,rgba(0,0,0,0.1)_100%)] mix-blend-multiply opacity-50 dark:opacity-100 dark:bg-[radial-gradient(circle_at_50%_40%,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
+          
+          {/* Persistent Top Bar */}
+          <header className="flex items-center justify-between px-6 py-8 z-30 bg-navy/80 backdrop-blur-xl border-b border-[var(--border)]">
+             <button className="p-2 text-text/30 hover:text-gold transition-colors">
+                <BridgeIcon className="w-6 h-6 text-gold" />
+             </button>
              
-             <div className="pt-12 border-t border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-6 opacity-40">
-                <p className="text-[8px] uppercase tracking-[0.4em] font-black text-text/30">
-                  © 2026 House of Daraja // Secure Archival Management
-                </p>
-                <div className="flex gap-8 text-[8px] uppercase tracking-[0.4em] font-black text-text/30">
-                   <span>Kano Kernel</span>
-                   <span>Lagos Node</span>
-                   <span>London Hub</span>
+             <Link to="/" className="flex flex-col items-center group">
+                <span className="text-2xl font-serif text-text tracking-[0.2em] font-black leading-none mb-0.5">HD</span>
+                <span className="text-[7px] uppercase tracking-[0.6em] text-gold font-black opacity-80">WEAR YOU WORTH</span>
+             </Link>
+             
+             <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-text/5 border border-[var(--border)] mr-2">
+                   <div className={`w-1 h-1 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+                   <span className="text-[6px] font-black uppercase text-text/30 tracking-[0.1em]">
+                     {isOnline ? 'Sovereign_Link_Active' : 'Offline_Cache_Node'}
+                   </span>
                 </div>
+                <Link to="/search" className="p-2 text-text/40 hover:text-gold transition-colors">
+                   <Search className="w-5 h-5" />
+                </Link>
+                <ThemeToggle />
              </div>
-          </footer>
-        </main>
+          </header>
 
-        <LeemaWidget />
-        <BottomNav />
+          <OfflineNotice />
+          
+          <main className="flex-grow overflow-y-auto relative pb-32 no-scrollbar z-20">
+            <AnimatePresence mode="wait">
+              <Routes>
+                <Route path="/" element={<HomeView />} />
+                <Route path="/marketplace" element={<MarketplaceView />} />
+                <Route path="/shop" element={<ShopView />} />
+                <Route path="/login" element={<LoginView />} />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <ProfileView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/drops" element={<DropView />} />
+                <Route path="/heritage" element={<HeritageView />} />
+                <Route path="/community" element={<CommunityView />} />
+                <Route path="/cart" element={<CartView />} />
+                <Route path="/checkout" element={
+                  <ProtectedRoute>
+                    <CheckoutView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/search" element={<SearchView />} />
+                <Route path="/saved" element={
+                  <ProtectedRoute>
+                    <SavedItemsView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/orders" element={
+                  <ProtectedRoute>
+                    <OrdersView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/rewards" element={
+                  <ProtectedRoute>
+                    <RewardsView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/product/:id" element={<ProductDetailView />} />
+                <Route path="/vendor/dashboard" element={
+                  <ProtectedRoute>
+                    <VendorDashboardView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/dashboard" element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminDashboardView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/atelier" element={<AtelierPortalView />} />
+                <Route path="/atelier/order" element={
+                  <ProtectedRoute>
+                    <AtelierOrderWizardView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/atelier/admin" element={
+                  <ProtectedRoute requireAdmin>
+                    <AtelierAdminView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/governance" element={<GovernanceView />} />
+                <Route path="/neural" element={<LinguisticNodeView />} />
+              </Routes>
+            </AnimatePresence>
+
+            {/* Global Sovereign Footer */}
+            <footer className="mt-20 p-12 bg-surface/30 border-t border-[var(--border)] space-y-12">
+               <div className="flex flex-col md:flex-row justify-between gap-12">
+                  <div className="space-y-6 max-w-xs">
+                     <div className="flex flex-col items-start gap-1">
+                        <span className="text-xl font-serif text-text tracking-[0.2em] font-black italic">Daraja Archive</span>
+                        <span className="text-[7px] uppercase tracking-[0.6em] text-gold font-black">Sovereign Media OS v.4.0</span>
+                     </div>
+                     <p className="text-[10px] text-text/30 leading-relaxed uppercase tracking-widest font-black">
+                        The official digital custodian of the House of Daraja. Chronicling the cultural narratives and artisanal legacies of the Sahel.
+                     </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-12 sm:gap-24">
+                     <div className="space-y-4">
+                        <h4 className="text-[9px] uppercase font-black text-gold tracking-[0.4em]">Nodes</h4>
+                        <ul className="space-y-2 text-[10px] text-text/40 uppercase tracking-widest font-medium">
+                           <li className="hover:text-gold transition-colors cursor-pointer">Heritage Archive</li>
+                           <li className="hover:text-gold transition-colors cursor-pointer">Global Trade</li>
+                          <li><Link to="/neural" className="hover:text-gold transition-colors cursor-pointer">Neural Link</Link></li>
+                        </ul>
+                     </div>
+                     <div className="space-y-4">
+                        <h4 className="text-[9px] uppercase font-black text-gold tracking-[0.4em]">Protocol</h4>
+                        <ul className="space-y-2 text-[10px] text-text/40 uppercase tracking-widest font-medium">
+                           <li className="hover:text-gold transition-colors cursor-pointer">Privacy Handshake</li>
+                           <li className="hover:text-gold transition-colors cursor-pointer">Artifact Terms</li>
+                           <li className="hover:text-gold transition-colors cursor-pointer">Sovereign Ethics</li>
+                        </ul>
+                     </div>
+                  </div>
+               </div>
+               
+               <div className="pt-12 border-t border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-6 opacity-40">
+                  <p className="text-[8px] uppercase tracking-[0.4em] font-black text-text/30">
+                    © 2026 House of Daraja // Secure Archival Management
+                  </p>
+                  <div className="flex gap-8 text-[8px] uppercase tracking-[0.4em] font-black text-text/30">
+                     <span>Kano Kernel</span>
+                     <span>Lagos Node</span>
+                     <span>London Hub</span>
+                  </div>
+               </div>
+            </footer>
+          </main>
+
+          <LeemaWidget />
+          <BottomNav />
+        </div>
       </div>
     </Router>
   );

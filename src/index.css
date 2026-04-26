@@ -31,7 +31,15 @@
 
 @layer base {
   html, body, #root {
-    @apply h-full w-full bg-navy text-text transition-colors duration-500 antialiased overflow-hidden;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: var(--navy);
+    color: var(--text-primary);
+    transition: background-color 0.5s ease;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     background-image: 
