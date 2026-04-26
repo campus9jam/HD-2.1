@@ -263,7 +263,7 @@ export default function LoginView() {
       {/* Footer Branded Elements */}
       <div className="absolute bottom-10 left-10 opacity-20 hidden md:block">
         <Sparkles className="w-24 h-24 text-gold/20 absolute -top-12 -left-12 animate-pulse" />
-        <span className="text-[10px] font-black uppercase tracking-[1em] text-white/40 rotate-90 origin-left">Protocol Security: Active</span>
+        <span className="text-[10px] font-black uppercase tracking-[1em] text-text/40 rotate-90 origin-left">Protocol Security: Active</span>
       </div>
     </div>
   );

@@ -32,11 +32,11 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center p-6 text-white font-sans">
+        <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center p-6 text-text font-sans">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-md w-full bg-[#161618] border border-white/5 rounded-2xl p-8 text-center"
+            className="max-w-md w-full bg-[#161618] border border-text/5 rounded-2xl p-8 text-center"
           >
             <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertCircle className="w-8 h-8 text-red-500" />
@@ -51,7 +51,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             </div>
             <button
               onClick={() => window.location.reload()}
-              className="w-full h-12 bg-white text-black rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+              className="w-full h-12 bg-text text-navy rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-text/80 transition-colors"
             >
               <RefreshCcw className="w-4 h-4" />
               Reset Interface

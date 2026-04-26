@@ -14,7 +14,7 @@ export default function ProductCard({ product }: { product: Product }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -5 }}
-      className="luxury-card group flex flex-col h-full bg-navy/40 hover:bg-surface transition-all border-white/10 hover:border-gold/30"
+      className="luxury-card group flex flex-col h-full bg-navy/40 hover:bg-surface transition-all border-text/10 hover:border-gold/30"
     >
       <Link to={`/product/${product.id}`} className="relative aspect-[3/4] overflow-hidden rounded-[1.2rem] m-3">
         <motion.img 
@@ -25,7 +25,7 @@ export default function ProductCard({ product }: { product: Product }) {
           transition={{ duration: 0.8, ease: "easeOut" }}
           referrerPolicy="no-referrer"
         />
-        <div className="absolute top-4 right-4 p-2 bg-navy/80 backdrop-blur-md rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-4 right-4 p-2 bg-navy/80 backdrop-blur-md rounded-full border border-text/10 opacity-0 group-hover:opacity-100 transition-opacity">
            <ShieldCheck className="w-4 h-4 text-gold" />
         </div>
         <div className="absolute inset-x-0 bottom-0 p-6 pt-16 bg-gradient-to-t from-navy/90 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-4 group-hover:translate-y-0">
@@ -43,7 +43,7 @@ export default function ProductCard({ product }: { product: Product }) {
       </Link>
 
       <div className="p-6 pt-2 space-y-4 text-center">
-        <h3 className="text-lg font-serif text-white group-hover:text-gold transition-colors italic leading-tight">{t(product, 'title')}</h3>
+        <h3 className="text-lg font-serif text-text group-hover:text-gold transition-colors italic leading-tight">{t(product, 'title')}</h3>
         <p className="text-xs text-gold font-black uppercase tracking-[0.2em]">₦{product.price.toLocaleString()}</p>
       </div>
     </motion.div>

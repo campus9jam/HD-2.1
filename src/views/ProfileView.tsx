@@ -351,7 +351,7 @@ export default function ProfileView() {
                        }
                        setShowConfig(false);
                      }}
-                     className="w-full py-4 bg-gold text-navy rounded-2xl text-[9px] font-black uppercase tracking-[0.4em] flex items-center justify-center gap-4 hover:bg-white transition-all shadow-[0_10px_30px_rgba(197,160,89,0.3)]"
+                     className="w-full py-4 bg-gold text-navy rounded-2xl text-[9px] font-black uppercase tracking-[0.4em] flex items-center justify-center gap-4 hover:bg-text transition-all shadow-[0_10px_30px_rgba(197,160,89,0.3)]"
                    >
                       <Save className="w-4 h-4" /> Save Configuration
                    </button>

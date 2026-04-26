@@ -109,10 +109,10 @@ export const VirtualAccountCard: React.FC<VirtualAccountProps> = ({
         <div className="flex justify-between items-start relative z-10">
           <div>
             <span className="text-[10px] uppercase font-black tracking-widest text-gold/60">Virtual_Account_Node</span>
-            <h3 className="text-2xl font-serif text-white mt-1 italic">Bank Transfer</h3>
+            <h3 className="text-2xl font-serif text-text mt-1 italic">Bank Transfer</h3>
           </div>
           <div className="flex flex-col items-end">
-            <span className="text-[10px] uppercase font-black text-white/30 tracking-widest">Expires_In</span>
+            <span className="text-[10px] uppercase font-black text-text/30 tracking-widest">Expires_In</span>
             <div className="flex items-center gap-1.5 mt-1">
               <Clock className="w-3 h-3 text-gold animate-pulse" />
               <span className="text-sm font-mono text-gold font-bold">{timeLeft}</span>
@@ -123,7 +123,7 @@ export const VirtualAccountCard: React.FC<VirtualAccountProps> = ({
 
       {/* Body - Main Focus Area */}
       <div className="p-8 space-y-8">
-        <div className="flex justify-between items-center text-white">
+        <div className="flex justify-between items-center text-text">
           <span className="text-xs uppercase font-light tracking-[0.2em] opacity-40">Currency_Fiat</span>
           <span className="text-xl font-serif font-bold">₦{(amount / 100).toLocaleString()}</span>
         </div>
@@ -131,13 +131,13 @@ export const VirtualAccountCard: React.FC<VirtualAccountProps> = ({
         <div className="space-y-4">
            <div>
              <label className="text-micro block mb-1">Bank_Institution</label>
-             <p className="text-sm font-medium text-white">{bankName}</p>
+             <p className="text-sm font-medium text-text">{bankName}</p>
            </div>
 
            <div>
              <label className="text-micro block mb-1 text-gold/60">Account_Number</label>
-             <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 group hover:border-gold/30 transition-all">
-                <span className="text-2xl font-mono font-bold tracking-wider text-white">
+             <div className="flex items-center justify-between p-4 bg-text/5 rounded-xl border border-text/10 group hover:border-gold/30 transition-all">
+                <span className="text-2xl font-mono font-bold tracking-wider text-text">
                   {accountNumber}
                 </span>
                 <button 
@@ -150,21 +150,21 @@ export const VirtualAccountCard: React.FC<VirtualAccountProps> = ({
            </div>
         </div>
 
-        <div className="pt-4 border-t border-white/5">
+        <div className="pt-4 border-t border-text/5">
            <div className="flex gap-4">
               <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">
                  <ShieldCheck className="w-5 h-5 text-gold" />
               </div>
-              <p className="text-[10px] text-white/40 leading-relaxed font-light">
+              <p className="text-[10px] text-text/40 leading-relaxed font-light">
                 Secure 256-bit encryption. System is listening for payment. 
-                <span className="block mt-1 font-bold text-white/60">Instructions: Open your mobile banking app and transfer the exact amount above.</span>
+                <span className="block mt-1 font-bold text-text/60">Instructions: Open your mobile banking app and transfer the exact amount above.</span>
               </p>
            </div>
         </div>
       </div>
 
       {/* Footer - Call to Action / Status */}
-      <div className="bg-navy p-6 flex flex-col items-center justify-center border-t border-white/5 space-y-4">
+      <div className="bg-navy p-6 flex flex-col items-center justify-center border-t border-text/5 space-y-4">
          <div className="flex items-center gap-3 text-[10px] uppercase font-black text-gold/60 tracking-widest">
             <Loader2 className="w-4 h-4 animate-spin" />
             Synchronizing_Ledger...
@@ -172,7 +172,7 @@ export const VirtualAccountCard: React.FC<VirtualAccountProps> = ({
          
          <button 
            onClick={simulatePayment}
-           className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-[8px] uppercase font-black tracking-[0.3em] text-white/40 hover:text-gold hover:border-gold/50 transition-all"
+           className="w-full py-3 bg-text/5 border border-text/10 rounded-xl text-[8px] uppercase font-black tracking-[0.3em] text-text/40 hover:text-gold hover:border-gold/50 transition-all"
          >
            Simulate_Inbound_Transfer
          </button>

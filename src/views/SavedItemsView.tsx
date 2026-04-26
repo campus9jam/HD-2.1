@@ -44,7 +44,7 @@ export default function SavedItemsView() {
                          <Link to={`/product/${item.id}`} className="luxury-button flex-1 !py-4 text-[10px]">VIEW ARCHIVE</Link>
                          <button 
                            onClick={() => removeFromWishlist(item.id)}
-                           className="p-4 bg-red-500/20 backdrop-blur-md rounded-xl text-red-500 hover:bg-red-500 hover:text-white transition-all"
+                           className="p-4 bg-red-500/20 backdrop-blur-md rounded-xl text-red-500 hover:bg-red-500 hover:text-text transition-all"
                          >
                             <Trash2 className="w-4 h-4" />
                          </button>

@@ -119,14 +119,14 @@ export default function LeemaWidget() {
           >
             {/* Drag Handle for Adjustability */}
             {!isMaximized && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/10 rounded-full mt-2 z-50 cursor-grab active:cursor-grabbing"></div>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-text/10 rounded-full mt-2 z-50 cursor-grab active:cursor-grabbing"></div>
             )}
             
             {/* Ambient Background Glow */}
             <div className="absolute inset-0 bg-gold/[0.02] pointer-events-none"></div>
             
             {/* Header */}
-            <header className="p-5 sm:p-7 border-b border-white/5 bg-navy flex justify-between items-center relative z-10">
+            <header className="p-5 sm:p-7 border-b border-text/5 bg-navy flex justify-between items-center relative z-10">
                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/50 to-transparent"></div>
                <div className="flex items-center gap-4">
                   <div className="relative group">
@@ -136,7 +136,7 @@ export default function LeemaWidget() {
                      <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-navy ring-1 ring-green-500/50 animate-pulse"></div>
                   </div>
                   <div>
-                     <h3 className="text-base font-serif italic text-white leading-tight">Leema_Consultant</h3>
+                     <h3 className="text-base font-serif italic text-text leading-tight">Leema_Consultant</h3>
                      <p className="text-[9px] uppercase font-black text-gold/60 tracking-widest flex items-center gap-1.5 pt-1">
                        <Shield className="w-2.5 h-2.5" /> High-Status Neural Link
                      </p>
@@ -150,21 +150,21 @@ export default function LeemaWidget() {
                            setMessages([]);
                         }
                      }}
-                     className="text-white/20 hover:text-red-500 transition-all p-3 hover:bg-red-500/10 rounded-xl"
+                     className="text-text/20 hover:text-red-500 transition-all p-3 hover:bg-red-500/10 rounded-xl"
                      title="Purge Dialogue"
                    >
                       <History className="w-5 h-5" />
                    </button>
                    <button 
                      onClick={() => setIsMaximized(!isMaximized)} 
-                    className="hidden sm:flex text-white/20 hover:text-white transition-all p-3 hover:bg-gold/10 rounded-xl border border-transparent hover:border-gold/20"
+                    className="hidden sm:flex text-text/20 hover:text-text transition-all p-3 hover:bg-gold/10 rounded-xl border border-transparent hover:border-gold/20"
                     title={isMaximized ? "Minimize Arhive" : "Expand Interface"}
                   >
                      {isMaximized ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
                   </button>
                   <button 
                     onClick={() => setIsOpen(false)} 
-                    className="text-white/20 hover:text-white transition-all p-3 hover:bg-red-500/10 rounded-xl"
+                    className="text-text/20 hover:text-text transition-all p-3 hover:bg-red-500/10 rounded-xl"
                   >
                      <ChevronDown className="w-6 h-6 block sm:hidden" />
                      <X className="w-5 h-5 hidden sm:block" />
@@ -179,13 +179,13 @@ export default function LeemaWidget() {
             >
               <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[url('https://picsum.photos/seed/cultural/800/800')] bg-repeat mix-blend-overlay"></div>
               
-              {messages.length === 0 && (
+               {messages.length === 0 && (
                 <div className="text-center py-16 space-y-8 max-w-sm mx-auto">
                    <div className="w-24 h-24 bg-gold/5 rounded-full flex items-center justify-center mx-auto border border-gold/10 shadow-[0_0_50px_rgba(212,175,55,0.1)]">
                       <History className="w-10 h-10 text-gold/30" />
                    </div>
                    <div className="space-y-4">
-                      <p className="text-sm text-white/50 italic font-serif leading-relaxed px-6">
+                      <p className="text-sm text-text/50 italic font-serif leading-relaxed px-6">
                         "I am Leema, archival AI for the House of Daraja. I facilitate high-fidelity negotiations and heritage insights. How shall we proceed with your acquisition today?"
                       </p>
                    </div>
@@ -195,10 +195,10 @@ export default function LeemaWidget() {
                        <button
                          key={i}
                          onClick={() => handleSend(action.text)}
-                         className="flex flex-col items-center gap-3 p-5 bg-white/[0.03] hover:bg-gold/[0.07] border border-white/5 hover:border-gold/30 rounded-[2rem] transition-all group"
+                         className="flex flex-col items-center gap-3 p-5 bg-text/[0.03] hover:bg-gold/[0.07] border border-text/5 hover:border-gold/30 rounded-[2rem] transition-all group"
                        >
                          <action.icon className="w-5 h-5 text-gold/40 group-hover:text-gold group-hover:scale-110 transition-all duration-500" />
-                         <span className="text-[10px] uppercase font-black tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">{action.label}</span>
+                         <span className="text-[10px] uppercase font-black tracking-[0.2em] text-text/40 group-hover:text-text transition-colors">{action.label}</span>
                        </button>
                      ))}
                    </div>
@@ -213,13 +213,13 @@ export default function LeemaWidget() {
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`max-w-[85%] sm:max-w-[75%] flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <div className={`mt-1 p-2.5 rounded-full h-10 w-10 flex-shrink-0 flex items-center justify-center border shadow-lg ${msg.role === 'user' ? 'bg-white/5 border-white/10' : 'bg-gold/10 border-gold/20'}`}>
-                       {msg.role === 'user' ? <User className="w-5 h-5 text-white/40" /> : <Sparkles className="w-5 h-5 text-gold" />}
+                    <div className={`mt-1 p-2.5 rounded-full h-10 w-10 flex-shrink-0 flex items-center justify-center border shadow-lg ${msg.role === 'user' ? 'bg-text/5 border-text/10' : 'bg-gold/10 border-gold/20'}`}>
+                       {msg.role === 'user' ? <User className="w-5 h-5 text-text/40" /> : <Sparkles className="w-5 h-5 text-gold" />}
                     </div>
                     <div className={`p-5 sm:p-6 rounded-[1.8rem] text-sm leading-relaxed font-sans shadow-2xl ${
                       msg.role === 'user' 
-                        ? 'bg-gold/20 text-white italic border border-gold/40 rounded-tr-none' 
-                        : 'bg-navy/90 text-white/90 border border-white/5 backdrop-blur-md rounded-tl-none'
+                        ? 'bg-gold/20 text-text italic border border-gold/40 rounded-tr-none' 
+                        : 'bg-navy/90 text-text/90 border border-text/5 backdrop-blur-md rounded-tl-none'
                     }`}>
                        {msg.text}
                     </div>
@@ -244,7 +244,7 @@ export default function LeemaWidget() {
                       <div className="p-2.5 rounded-full h-10 w-10 bg-gold/10 border border-gold/20 flex items-center justify-center animate-pulse">
                          <Globe className="w-5 h-5 text-gold" />
                       </div>
-                      <div className="flex items-center gap-2 px-8 py-5 bg-white/5 rounded-full border border-white/10 shadow-xl">
+                      <div className="flex items-center gap-2 px-8 py-5 bg-text/5 rounded-full border border-text/10 shadow-xl">
                          <div className="w-2 h-2 bg-gold rounded-full animate-bounce [animation-duration:0.8s]"></div>
                          <div className="w-2 h-2 bg-gold rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.2s]"></div>
                          <div className="w-2 h-2 bg-gold rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.4s]"></div>
@@ -255,7 +255,7 @@ export default function LeemaWidget() {
             </div>
 
             {/* Input Area */}
-            <div className="p-6 sm:p-10 border-t border-white/5 bg-navy/80 relative z-10">
+            <div className="p-6 sm:p-10 border-t border-text/5 bg-navy/80 relative z-10">
                <div className="relative flex items-center group">
                   <input 
                     type="text"
@@ -263,28 +263,28 @@ export default function LeemaWidget() {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     placeholder="Negotiate, query archives, ask about heritage..."
-                    className="w-full bg-surface/50 border border-white/10 rounded-[2rem] pl-8 pr-16 py-5 text-sm text-white placeholder:text-white/20 focus:border-gold/50 focus:bg-surface outline-none transition-all shadow-inner group-hover:border-white/20"
+                    className="w-full bg-surface/50 border border-text/10 rounded-[2rem] pl-8 pr-16 py-5 text-sm text-text placeholder:text-text/20 focus:border-gold/50 focus:bg-surface outline-none transition-all shadow-inner group-hover:border-text/20"
                   />
                   <button 
                     onClick={() => handleSend()}
                     disabled={isLoading || !input.trim()}
-                    className="absolute right-2 p-4 bg-gold text-navy rounded-[1.5rem] hover:bg-white disabled:opacity-30 transition-all shadow-xl shadow-gold/20 group-active:scale-95"
+                    className="absolute right-2 p-4 bg-gold text-navy rounded-[1.5rem] hover:bg-text disabled:opacity-30 transition-all shadow-xl shadow-gold/20 group-active:scale-95"
                   >
                     <Send className="w-5 h-5" />
                   </button>
                </div>
                <div className="mt-6 flex justify-between items-center px-4">
                   <div className="flex gap-6">
-                     <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/5">
+                     <div className="flex items-center gap-2 px-3 py-1.5 bg-text/5 rounded-lg border border-text/5">
                         <span className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
-                        <span className="text-[8px] font-black uppercase text-white/40 tracking-widest leading-none">
+                        <span className="text-[8px] font-black uppercase text-text/40 tracking-widest leading-none">
                           {user ? 'Identity_Verified' : 'Guest_Secure'}
                         </span>
                      </div>
                   </div>
                   <div className="flex items-center gap-3">
-                     <BookOpen className="w-3 h-3 text-white/20" />
-                     <span className="text-[8px] font-black uppercase text-white/20 tracking-[0.3em] leading-none">
+                     <BookOpen className="w-3 h-3 text-text/20" />
+                     <span className="text-[8px] font-black uppercase text-text/20 tracking-[0.3em] leading-none">
                        {language.toUpperCase()} ENGINE ACTIVE
                      </span>
                   </div>
@@ -302,7 +302,7 @@ export default function LeemaWidget() {
         onClick={() => setIsOpen(!isOpen)}
         className={`w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-gold text-navy shadow-[0_20px_50px_rgba(212,175,55,0.3)] flex items-center justify-center border-4 border-navy pointer-events-auto relative group overflow-hidden ${isOpen && isMaximized ? 'hidden sm:flex' : 'flex'}`}
       >
-        <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="absolute inset-0 bg-text/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <AnimatePresence mode="wait">
           {isOpen ? (
             <motion.div 
@@ -322,7 +322,7 @@ export default function LeemaWidget() {
                className="relative"
             >
                <MessageCircle className="w-7 h-7" />
-               <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center border-2 border-navy">
+               <div className="absolute -top-1 -right-1 w-4 h-4 bg-text rounded-full flex items-center justify-center border-2 border-navy">
                   <div className="w-2 h-2 bg-gold rounded-full animate-ping"></div>
                </div>
             </motion.div>

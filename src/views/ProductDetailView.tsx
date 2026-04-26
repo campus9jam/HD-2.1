@@ -202,7 +202,7 @@ export default function ProductDetailView() {
         </Link>
         <button 
            onClick={() => toggleWishlist(product as any)}
-           className={`p-4 backdrop-blur-xl rounded-full border transition-all pointer-events-auto group ${isSaved ? 'bg-red-500 border-red-500 text-white' : 'bg-surface/40 border-text/10 text-text hover:text-red-500'}`}
+           className={`p-4 backdrop-blur-xl rounded-full border transition-all pointer-events-auto group ${isSaved ? 'bg-red-500 border-red-500 text-text' : 'bg-surface/40 border-text/10 text-text hover:text-red-500'}`}
         >
            <Heart className={`w-5 h-5 transition-all ${isSaved ? 'fill-current' : 'group-hover:fill-current'}`} />
         </button>

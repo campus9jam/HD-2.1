@@ -80,7 +80,7 @@ export function generateOrderReceiptHTML(order: any, client: any) {
           .total { font-size: 18px; font-weight: bold; color: #1a1a1a; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
           .footer { margin-top: 50px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
           .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 9px; font-weight: bold; text-transform: uppercase; margin-left: 10px; }
-          .badge-paid { background: #d4af37; color: white; }
+          .badge-paid { background: #d4af37; color: #ffffff; }
           .badge-unpaid { background: #eee; color: #999; }
         </style>
       </head>

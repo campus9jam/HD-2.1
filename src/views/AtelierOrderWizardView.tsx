@@ -497,7 +497,7 @@ export default function AtelierOrderWizardView() {
                            {TERMS_AND_CONDITIONS.map((section, idx) => (
                               <div key={idx} className="space-y-4">
                                  <h3 className="text-lg font-serif text-gold italic">{section.title}</h3>
-                                 <p className="text-sm text-white/60 leading-relaxed font-light">{section.content}</p>
+                                 <p className="text-sm text-text/60 leading-relaxed font-light">{section.content}</p>
                               </div>
                            ))}
                         </div>

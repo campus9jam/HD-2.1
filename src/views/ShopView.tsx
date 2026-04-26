@@ -73,7 +73,7 @@ export default function ShopView() {
                 <h1 className="text-xl font-serif text-text italic tracking-widest uppercase">The Archives</h1>
                 <div className="flex items-center gap-2">
                   {isOfflineData && (
-                    <div className="flex items-center gap-2 px-2 py-1 bg-white/5 rounded-full border border-white/5">
+                    <div className="flex items-center gap-2 px-2 py-1 bg-text/5 rounded-full border border-text/5">
                        <Database className="w-3 h-3 text-gold/60" />
                        <span className="text-[6px] font-black uppercase text-text/30 tracking-widest text-nowrap">Local_Node</span>
                     </div>
@@ -90,7 +90,7 @@ export default function ShopView() {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center bg-white/5 rounded-2xl px-4 py-2 w-full border border-gold/20"
+                className="flex items-center bg-text/5 rounded-2xl px-4 py-2 w-full border border-gold/20"
               >
                 <Search className="w-4 h-4 text-gold/40 mr-3" />
                 <input 
@@ -177,8 +177,8 @@ export default function ShopView() {
                            }}
                            className={`absolute top-4 right-4 p-3 rounded-full backdrop-blur-xl border transition-all ${
                              isInWishlist(item.id) 
-                               ? 'bg-red-500 border-red-500 text-white' 
-                               : 'bg-navy/40 border-white/10 text-white/40 hover:text-red-500'
+                               ? 'bg-red-500 border-red-500 text-text' 
+                               : 'bg-navy/40 border-text/10 text-text/40 hover:text-red-500'
                            }`}
                         >
                            <Heart className={`w-4 h-4 ${isInWishlist(item.id) ? 'fill-current' : ''}`} />

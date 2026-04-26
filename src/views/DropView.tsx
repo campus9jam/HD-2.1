@@ -53,13 +53,13 @@ export default function DropView() {
          <div className="space-y-4">
             <div className="flex items-center justify-center gap-3">
                <span className="text-gold">✦</span>
-               <h2 className="text-sm font-serif italic text-white tracking-[0.4em] uppercase">Limited Drop</h2>
+               <h2 className="text-sm font-serif italic text-text tracking-[0.4em] uppercase">Limited Drop</h2>
                <span className="text-gold">✦</span>
             </div>
             
             <div className="flex justify-center items-center gap-6">
                <div className="text-center">
-                  <p className="text-5xl font-mono text-white tracking-widest leading-none">
+                  <p className="text-5xl font-mono text-text tracking-widest leading-none">
                      {timeLeft.h.toString().padStart(2, '0')} : {timeLeft.m.toString().padStart(2, '0')} : {timeLeft.s.toString().padStart(2, '0')}
                   </p>
                   <p className="text-[7px] uppercase font-black text-gold tracking-[0.5em] mt-3">Remaining Time</p>
@@ -71,12 +71,12 @@ export default function DropView() {
       {/* Drop Content */}
       <main className="relative z-10 px-8 flex flex-col items-center text-center space-y-16">
          <div className="space-y-6">
-            <h1 className="text-6xl md:text-8xl font-serif text-white italic tracking-tighter leading-tight drop-shadow-2xl">
+            <h1 className="text-6xl md:text-8xl font-serif text-text italic tracking-tighter leading-tight drop-shadow-2xl">
                Heritage <br/>
                <span className="text-gold-light">Release</span>
             </h1>
             <div className="flex flex-col items-center gap-2">
-               <p className="text-2xl font-serif text-white italic">₦250,000</p>
+               <p className="text-2xl font-serif text-text italic">₦250,000</p>
                <div className="w-12 h-[1px] bg-gold/30"></div>
             </div>
          </div>
@@ -86,9 +86,9 @@ export default function DropView() {
                { icon: Zap, label: 'Allocations', value: '24' },
                { icon: Sparkles, label: 'Tier Status', value: 'Gold Key' }
             ].map((stat, i) => (
-               <div key={i} className="luxury-card p-6 bg-navy/60 backdrop-blur-xl border-white/5 space-y-2">
+               <div key={i} className="luxury-card p-6 bg-navy/60 backdrop-blur-xl border-text/5 space-y-2">
                   <stat.icon className="w-4 h-4 text-gold mx-auto" />
-                  <p className="text-[10px] font-black uppercase text-white/40 tracking-widest">{stat.label}</p>
+                  <p className="text-[10px] font-black uppercase text-text/40 tracking-widest">{stat.label}</p>
                   <p className="text-xs font-serif italic text-gold">{stat.value}</p>
                </div>
             ))}
@@ -102,7 +102,7 @@ export default function DropView() {
             disabled={isJoined}
             className={`luxury-button w-full !rounded-2xl !py-9 text-xs font-black tracking-[0.4em] shadow-[0_20px_60px_rgba(197,160,89,0.4)] group overflow-hidden relative transition-all ${isJoined ? 'bg-green-500/20 text-green-500 border-green-500/40' : ''}`}
           >
-             <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+             <div className="absolute inset-0 bg-text/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
              <span className="relative z-10 flex items-center justify-center gap-3">
                 {isJoined ? (
                   <>
