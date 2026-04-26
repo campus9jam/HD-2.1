@@ -99,6 +99,11 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
+    
+    // Fallback to index.html for SPA routing
+    app.get('*', (req, res) => {
+      res.redirect('/');
+    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
