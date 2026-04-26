@@ -1,0 +1,243 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "Sovereign Identity",
+      "description": "High-status identity profile for House of Daraja citizens.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "photoURL": { "type": "string" },
+        "statusTier": { "type": "string", "enum": ["Citizen", "Gold", "Platinum", "Diamond Elite"] },
+        "role": { "type": "string", "enum": ["citizen", "contributor", "admin"] },
+        "xp": { "type": "integer" },
+        "identities": { "type": "array", "items": { "type": "string" } },
+        "communicationChannels": { "type": "array", "items": { "type": "string", "enum": ["Email", "WhatsApp", "Discord", "Neural_Native"] } },
+        "savedAddresses": { "type": "array", "items": { "type": "object", "properties": { "label": { "type": "string" }, "address": { "type": "string" } } } },
+        "identityMarkers": { "type": "object", "properties": { "title": { "type": "string" }, "tribe": { "type": "string" }, "lineage": { "type": "string" } } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "statusTier", "role"]
+    },
+    "Product": {
+      "title": "Luxury Artifact",
+      "description": "High-fidelity artifact metadata including provenance and status.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "currency": { "type": "string" },
+        "media": { "type": "array", "items": { "type": "string" } },
+        "category": { "type": "string", "enum": ["Heritage", "Streetwear", "Marketplace", "Accessories"] },
+        "stock": { "type": "integer" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "vendorId": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "archived", "drop"] },
+        "provenance": { "type": "string" },
+        "translations": { 
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "price", "category", "vendorId", "status"]
+    },
+    "Vendor": {
+      "title": "Artisan Node",
+      "description": "Accredited artisan profile within the decentralized network.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "location": { "type": "string" },
+        "rating": { "type": "number" },
+        "specialty": { "type": "string" },
+        "accreditationLevel": { "type": "string", "enum": ["Gold", "Platinum", "Master"] }
+      },
+      "required": ["name", "accreditationLevel"]
+    },
+    "Acquisition": {
+      "title": "Provenance Record",
+      "description": "Immutable ledger of high-status asset transfer.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "buyerId": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "object" } },
+        "totalValue": { "type": "number" },
+        "status": { "type": "string", "enum": ["secured", "inbound", "transit", "archived"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "provenanceHash": { "type": "string" }
+      },
+      "required": ["buyerId", "items", "totalValue", "status", "timestamp"]
+    },
+    "FeedItem": {
+      "title": "Status Signal",
+      "description": "Social activity broadcast within the sovereign community.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userTier": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "action", "timestamp"]
+    },
+    "CommunityVideo": {
+      "title": "Media Archive",
+      "description": "YouTube metadata categorized and enriched by Leema AI.",
+      "type": "object",
+      "properties": {
+        "youtubeId": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["Dandali", "Zare Global", "Co-Creators", "Uncategorized"] },
+        "thumbnail": { "type": "string" },
+        "publishedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "published", "rejected", "archived"] },
+        "ai_metadata": {
+          "type": "object",
+          "properties": {
+            "tags": { "type": "array", "items": { "type": "string" } },
+            "summary": { "type": "string" },
+            "cultural_context": { "type": "string" },
+            "multilingual_titles": {
+              "type": "object",
+              "properties": {
+                "hausa": { "type": "string" },
+                "french": { "type": "string" },
+                "arabic": { "type": "string" }
+              }
+            }
+          }
+        },
+        "source": { "type": "string" },
+        "syncedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["youtubeId", "title", "category", "publishedAt", "status"]
+    },
+    "AtelierClient": {
+      "title": "Atelier Identity Node",
+      "description": "Registered profile for bespoke fabrication services.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientName": { "type": "string" },
+        "username": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "clientType": { "type": "string", "enum": ["Regular", "VIP", "Elite"] },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientName", "username", "email"]
+    },
+    "AtelierOrder": {
+      "title": "Fabrication Node",
+      "description": "Comprehensive tracking of a bespoke garment fabrication.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientUsername": { "type": "string" },
+        "outfitName": { "type": "string" },
+        "outfitType": { "type": "string" },
+        "fabric": { "type": "string" },
+        "price": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pending", "Cutting", "Sewing", "Fitting", "Ready", "Delivered", "Cancelled"] },
+        "priority": { "type": "string", "enum": ["Normal", "High", "Urgent"] },
+        "depositPaid": { "type": "boolean" },
+        "balancePaid": { "type": "boolean" },
+        "deadline": { "type": "string" },
+        "orderNotes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientUsername", "outfitName", "price", "status"]
+    },
+    "GovernanceProposal": {
+      "title": "Sovereign Proposal",
+      "description": "A legislative motion for community consensus.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "votes": { "type": "integer" },
+        "author": { "type": "string" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "category": { "type": "string", "enum": ["Protocol", "Artisan", "Economic"] },
+        "status": { "type": "string", "enum": ["active", "passed", "defeated"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "category", "status"]
+    },
+    "GovernanceVote": {
+      "title": "Citizen Vote",
+      "description": "A recorded vote in the sovereign ledger.",
+      "type": "object",
+      "properties": {
+        "proposalId": { "type": "string" },
+        "userId": { "type": "string" },
+        "weight": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["proposalId", "userId", "weight"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Sovereign identity profile for each citizen."
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Curated collection of high-fidelity luxury artifacts."
+    },
+    "/vendors/{vendorId}": {
+      "schema": "Vendor",
+      "description": "Accredited artisan nodes within the Sahelian network."
+    },
+    "/acquisitions/{acquisitionId}": {
+      "schema": "Acquisition",
+      "description": "Immutable ledger of asset transfers across the network."
+    },
+    "/feed/{feedId}": {
+      "schema": "FeedItem",
+      "description": "Live broadcast of high-status signals and communal activities."
+    },
+    "/community_videos/{videoId}": {
+      "schema": "CommunityVideo",
+      "description": "Archived media from YouTube RSS ingestion."
+    },
+    "/atelier_clients/{clientId}": {
+      "schema": "AtelierClient",
+      "description": "Registered identities for the bespoke fabrication pipeline."
+    },
+    "/atelier_orders/{orderId}": {
+      "schema": "AtelierOrder",
+      "description": "Active fabrication nodes for bespoke garment creation."
+    },
+    "/governance_proposals/{proposalId}": {
+      "schema": "GovernanceProposal",
+      "description": "Legislative proposals in the sovereign consensus network."
+    },
+    "/governance_votes/{voteId}": {
+      "schema": "GovernanceVote",
+      "description": "Individual citizen votes recorded in the ledger."
+    }
+  }
+}

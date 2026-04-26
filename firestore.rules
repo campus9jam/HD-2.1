@@ -1,0 +1,312 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // PHASE 3: PRIMITIVE DEFINITIONS
+    // ==========================================
+    
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function isAdmin() { 
+      return isSignedIn() 
+        && isVerified()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); 
+    }
+    function isMediaAdmin() { 
+      return isSignedIn() && (
+        isAdmin() || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      ); 
+    }
+    function isContributor() { 
+      return isSignedIn() && (
+        isMediaAdmin() || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'contributor')
+      ); 
+    }
+    function isVerified() { 
+      return isSignedIn() && (
+        request.auth.token.email_verified == true || 
+        request.auth.token.firebase.sign_in_provider == 'phone'
+      ); 
+    }
+    
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    function isValidId(id) { 
+        return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    // ==========================================
+    // PHASE 4: VALIDATION BLUEPRINTS
+    // ==========================================
+    
+    function isValidUserProfile(data) {
+        return data.uid is string && data.uid.size() <= 128
+            && (data.displayName == null || (data.displayName is string && data.displayName.size() >= 2 && data.displayName.size() <= 50))
+            && (data.email == null || (data.email is string && data.email.size() <= 100))
+            && data.statusTier in ['Citizen', 'Gold', 'Platinum', 'Diamond Elite', 'Elder']
+            && data.role in ['citizen', 'contributor', 'admin']
+            && data.xp is int && data.xp >= 0
+            && data.identities is list && data.identities.size() <= 10
+            && (data.identities.size() == 0 || data.identities[0] is string)
+            && data.createdAt == request.time
+            && data.updatedAt == request.time;
+    }
+
+    function isValidRewardActivation(data) {
+        return data.userId is string && data.userId == request.auth.uid
+            && data.rewardId is string && data.rewardId.size() <= 128
+            && data.rewardTitle is string && data.rewardTitle.size() <= 100
+            && data.cost is int && data.cost >= 0
+            && data.timestamp == request.time;
+    }
+
+    function isValidAtelierClient(data) {
+        return data.clientName is string && data.clientName.size() <= 100
+            && data.username is string && data.username.size() <= 50
+            && data.email is string && data.email.size() <= 100
+            && (data.createdAt == request.time || data.createdAt is int);
+    }
+
+    function isValidAtelierOrder(data) {
+        return data.keys().hasAll(['clientUsername', 'outfitName', 'price', 'status', 'depositPaid', 'balancePaid'])
+            && data.clientUsername is string && data.clientUsername.size() <= 100
+            && data.outfitName is string && data.outfitName.size() <= 100
+            && data.price is number && data.price >= 0
+            && data.status in ['Pending', 'Cutting', 'Sewing', 'Fitting', 'Ready', 'Delivered', 'Cancelled']
+            && (data.createdAt == request.time || data.createdAt is int)
+            && (data.get('driveFiles', null) == null || (
+                data.driveFiles is list && data.driveFiles.size() <= 10 &&
+                (data.driveFiles.size() == 0 || (
+                    data.driveFiles[0].id is string && data.driveFiles[0].id.size() <= 128 &&
+                    data.driveFiles[0].name is string && data.driveFiles[0].name.size() <= 256 &&
+                    data.driveFiles[0].url is string && data.driveFiles[0].url.size() <= 1024
+                ))
+            ));
+    }
+
+    function isValidProduct(data) {
+        return data.keys().hasAll(['title', 'price', 'category', 'vendorId', 'status', 'media'])
+            && data.title is string && data.title.size() <= 200
+            && data.price is number && data.price >= 0
+            && data.stock is int && data.stock >= 0
+            && data.vendorId is string && data.vendorId.size() <= 128
+            && data.status in ['active', 'archived', 'drop']
+            && data.media is list && data.media.size() <= 10
+            && (data.get('driveMedia', null) == null || (
+                data.driveMedia is list && data.driveMedia.size() <= 10 &&
+                (data.driveMedia.size() == 0 || (
+                    data.driveMedia[0].url is string && data.driveMedia[0].url.size() <= 1024 &&
+                    data.driveMedia[0].name is string && data.driveMedia[0].name.size() <= 256
+                ))
+            ));
+    }
+
+    function isValidAcquisition(data) {
+        return data.buyerId is string && data.buyerId == request.auth.uid
+            && data.items is list && data.items.size() >= 1 && data.items.size() <= 50
+            && data.totalValue is number && data.totalValue >= 0
+            && data.status in ['secured', 'inbound', 'transit', 'archived']
+            && data.timestamp == request.time;
+    }
+
+    function isValidFeedItem(data) {
+        return data.userId is string && data.userId == request.auth.uid
+            && data.action is string && data.action.size() <= 200
+            && data.timestamp == request.time;
+    }
+
+    function isValidCommunityVideo(data) {
+        return data.youtubeId is string && data.youtubeId.size() <= 32
+            && data.title is string && data.title.size() <= 255
+            && data.category in ['Dandali', 'Zare Global', 'Co-Creators', 'Uncategorized']
+            && data.thumbnail is string && data.thumbnail.size() <= 512
+            && data.status in ['pending', 'published', 'rejected', 'archived']
+            && data.publishedAt is string
+            && data.source == 'youtube_rss'
+            && (data.ai_metadata == null || (
+                data.ai_metadata.tags is list &&
+                data.ai_metadata.summary is string &&
+                data.ai_metadata.cultural_context is string
+            ));
+    }
+
+    // ==========================================
+    // GLOBAL SAFETY NET
+    // ==========================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ==========================================
+    // SOVEREIGN COLLECTION RULES
+    // ==========================================
+
+    // ==========================================
+    // MODULE 1: IDENTITY & ACCESS (ZERO-TRUST)
+    // ==========================================
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUserProfile(incoming())
+                    && incoming().role == 'citizen'; // Role injection guard
+      allow update: if (isOwner(userId) && isVerified() 
+                      && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'bio', 'savedAddresses', 'communicationChannels', 'updatedAt'])
+                      && incoming().updatedAt == request.time)
+                    || isAdmin();
+    }
+
+    match /reward_activations/{activationId} {
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isVerified() 
+                    && isValidRewardActivation(incoming())
+                    && isValidId(activationId)
+                    // Pillar 7: Atomicity Guarantee
+                    && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.xp == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.xp - incoming().cost;
+      allow update, delete: if false;
+    }
+
+    // ==========================================
+    // MODULE 2: CATALOGUE SECURITY
+    // ==========================================
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isVerified() && (request.auth.token.role == 'vendor' || isAdmin()) 
+                    && isValidProduct(incoming());
+      allow update: if isVerified() && (isOwner(existing().vendorId) || isAdmin()) 
+                    && isValidProduct(incoming())
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'price', 'stock', 'status', 'media', 'driveMedia', 'updatedAt']);
+      allow delete: if isAdmin() || (isVerified() && isOwner(existing().vendorId));
+    }
+
+    match /vendors/{vendorId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (isOwner(vendorId) && incoming().diff(existing()).affectedKeys().hasOnly(['description', 'location', 'specialty']));
+    }
+
+    // ==========================================
+    // MODULE 3: ATOMIC ORDERS & PAYMENTS
+    // ==========================================
+    function isValidOrder(data) {
+      return data.keys().hasAll(['productId', 'amount', 'status', 'customerId', 'vendorId', 'timestamp'])
+             && data.amount is int && data.amount > 0
+             && data.status in ['pending', 'paid', 'failed', 'shipped', 'completed']
+             && data.customerId == request.auth.uid
+             && data.timestamp == request.time;
+    }
+
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && (isOwner(existing().customerId) || isOwner(existing().vendorId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.vendorId == request.auth.uid || isAdmin());
+      
+      // Zero-Trust: Users can only create 'pending' orders
+      allow create: if isVerified() && isValidOrder(incoming()) && incoming().status == 'pending';
+      
+      // Zero-Trust: Users CANNOT update status to 'paid'. 
+      // Only the Server-side Admin SDK handler (webhooks) can do this.
+      allow update: if isVerified() && (
+        (isOwner(existing().customerId) && incoming().diff(existing()).affectedKeys().hasOnly(['shippingAddress', 'notes']))
+        || isAdmin()
+      ) && existing().status == 'pending';
+      
+      allow delete: if isAdmin();
+    }
+
+    match /feed/{feedId} {
+      allow read: if true;
+      allow create: if isVerified() && isValidFeedItem(incoming()) && isValidId(feedId);
+      allow update, delete: if isAdmin();
+    }
+
+    match /community_videos/{videoId} {
+      allow get, list: if resource.data.status == 'published' || isContributor();
+      allow create: if isContributor() && isVerified() && isValidCommunityVideo(incoming())
+                    && incoming().createdAt == request.time
+                    && incoming().updatedAt == request.time;
+      allow update: if (isMediaAdmin() && isVerified() && isValidCommunityVideo(incoming())
+                    && incoming().updatedAt == request.time
+                    && incoming().createdAt == existing().createdAt)
+                    || (
+                      isContributor() && isVerified() && existing().status == 'pending' 
+                      && incoming().diff(existing()).affectedKeys().hasOnly(['ai_metadata', 'category', 'updatedAt'])
+                      && isValidCommunityVideo(incoming())
+                      && incoming().updatedAt == request.time
+                      && incoming().createdAt == existing().createdAt
+                    );
+      allow delete: if isMediaAdmin() && isVerified();
+    }
+
+    match /chat_sessions/{sessionId} {
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() 
+                    && incoming().userId == request.auth.uid
+                    && (incoming().userMessage is string && incoming().userMessage.size() <= 2000)
+                    && (incoming().aiResponse is string && incoming().aiResponse.size() <= 4000)
+                    && incoming().timestamp == request.time;
+      allow update, delete: if isAdmin();
+    }
+
+    match /atelier_clients/{clientId} {
+      allow get: if isSignedIn() && (existing().email == request.auth.token.email || isAdmin());
+      allow list: if isAdmin() || (isSignedIn() && resource.data.email == request.auth.token.email);
+      allow create: if isSignedIn() && isValidAtelierClient(incoming()) 
+                    && incoming().email == request.auth.token.email;
+      allow update: if isAdmin() || (isSignedIn() && existing().email == request.auth.token.email && incoming().diff(existing()).affectedKeys().hasOnly(['phone', 'address', 'notes']));
+      allow delete: if isAdmin();
+    }
+
+    match /atelier_orders/{orderId} {
+      allow get: if isSignedIn() && (exists(/databases/$(database)/documents/atelier_clients/$(existing().clientUsername)) && get(/databases/$(database)/documents/atelier_clients/$(existing().clientUsername)).data.email == request.auth.token.email || isAdmin());
+      allow list: if isAdmin() || (isSignedIn()); 
+      
+      allow create: if (isSignedIn() && isValidAtelierOrder(incoming())) || isAdmin();
+      allow update: if isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/atelier_clients/$(existing().clientUsername)) && get(/databases/$(database)/documents/atelier_clients/$(existing().clientUsername)).data.email == request.auth.token.email && incoming().diff(existing()).affectedKeys().hasOnly(['orderNotes']));
+      allow delete: if isAdmin();
+    }
+
+    match /governance_proposals/{proposalId} {
+      allow read: if isSignedIn();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        isSignedIn() && 
+        incoming().diff(existing()).affectedKeys().hasOnly(['votes']) &&
+        incoming().votes == existing().votes + 1
+      );
+    }
+
+    match /governance_votes/{voteId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() 
+                    && incoming().userId == request.auth.uid
+                    && incoming().timestamp == request.time
+                    && isValidId(voteId)
+                    && voteId == incoming().proposalId + '_' + request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /connection_handshakes/{handshakeId} {
+      allow read: if isSignedIn() && (resource.data.fromId == request.auth.uid || resource.data.toId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isVerified() && incoming().fromId == request.auth.uid && isValidId(handshakeId);
+      allow update: if isSignedIn() && isVerified() && (existing().toId == request.auth.uid || isAdmin()) && incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+      allow delete: if isAdmin();
+    }
+
+    match /system_logs/{logId} {
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // High-Status Admin Nodes
+    match /admins/{adminId} {
+      allow read: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
+      allow write: if false; // Only manageable through console/cli
+    }
+  }
+}

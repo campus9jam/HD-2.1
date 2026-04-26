@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-navy: var(--navy);
+  --color-gold: var(--gold);
+  --color-surface: var(--surface);
+  --color-text: var(--text-primary);
+  --color-gold-light: #F7E7CE;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-sans: "Montserrat", sans-serif;
+}
+
+:root {
+  --navy: #050505;
+  --gold: #C5A059;
+  --gold-rgb: 197, 160, 89;
+  --surface: #0E0E0E;
+  --text-primary: #FFFFFF;
+  --border: rgba(255, 255, 255, 0.1);
+}
+
+:root.light {
+  --navy: #EEE7DE; /* Brownish-Milk Linen */
+  --gold: #856936; /* Deep Bronzed Gold */
+  --gold-rgb: 133, 105, 54;
+  --surface: #E5DCD0; /* Richer Cream Surface */
+  --text-primary: #1A1816; /* Deep Sepia Charcoal */
+  --border: rgba(133, 105, 54, 0.2); /* Muted gold border */
+}
+
+@layer base {
+  html, body, #root {
+    @apply h-full w-full bg-navy text-text transition-colors duration-500 antialiased overflow-hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    background-image: 
+      radial-gradient(circle at 50% 50%, rgba(var(--gold-rgb), 0.12) 0%, transparent 80%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-blend-mode: soft-light;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-1;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-navy;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gold/20 rounded-full;
+  }
+}
+
+@layer components {
+  .luxury-card {
+    @apply bg-surface/50 backdrop-blur-xl border border-[var(--border)] rounded-[1.5rem] overflow-hidden transition-all duration-500 hover:border-gold/30;
+  }
+
+  .luxury-button {
+    @apply bg-gold text-navy font-black text-[10px] uppercase tracking-[0.3em] px-10 py-5 rounded-lg hover:brightness-110 transition-all duration-500 shadow-xl shadow-gold/10 flex items-center justify-center gap-3 active:scale-95;
+  }
+
+  .luxury-button-outline {
+    @apply border border-gold/40 text-gold font-black text-[10px] uppercase tracking-[0.3em] px-10 py-5 rounded-lg hover:bg-gold hover:text-navy transition-all duration-500 flex items-center justify-center gap-3 active:scale-95;
+  }
+
+  .text-display {
+    @apply text-5xl md:text-8xl font-serif italic tracking-tighter leading-[0.9] text-text;
+  }
+
+  .text-h2 {
+    @apply text-2xl md:text-3xl font-serif italic text-text;
+  }
+
+  .text-micro {
+    @apply text-[9px] font-black uppercase tracking-[0.4em] text-text/50;
+  }
+
+  .text-body {
+    @apply text-sm md:text-base text-text/70 leading-relaxed font-light;
+  }
+
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border border-gold/20 text-gold;
+  }
+
+  .horizontal-line {
+    @apply w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--border)] to-transparent;
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  [dir="rtl"] {
+    text-align: right;
+  }
+
+  [dir="rtl"] .luxury-button svg,
+  [dir="rtl"] .luxury-button-outline svg,
+  [dir="rtl"] .rotate-rtl {
+    transform: scaleX(-1);
+  }
+}
+
+/* Golden Ratio Utilities */
+.golden-primary { width: 61.8%; }
+.golden-secondary { width: 38.2%; }

@@ -1,0 +1,8 @@
+{
+  "name": "House of Daraja",
+  "description": "Sovereign Heritage Platform & Community OS. Archival trade, high-fidelity media, and decentralized AI cultural concierges for the Global Sahelian nobility.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
