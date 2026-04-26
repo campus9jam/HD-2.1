@@ -1,9 +1,6 @@
 import { Product } from "../types";
 import { db, handleFirestoreError } from "../lib/firebase";
-import { collection, addDoc, query, where, orderBy, limit, getDocs, serverTimestamp, doc, updateDoc, getDoc } from "firebase/firestore";
-import { GoogleGenAI, Type } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+import { collection, addDoc, query, where, orderBy, limit, getDocs, serverTimestamp } from "firebase/firestore";
 
 export class LeemaAI {
   private history: any[] = [];
@@ -42,59 +39,40 @@ export class LeemaAI {
         You are Leema, the elite commerce and cultural concierge of House of Daraja. 
         BRAND CORE: "Wear Your Worth" — Sahelian royalty meets cyber-heritage.
         BEHAVIOR: Witty, relationship-first negotiator from Kano's Kurmi Market.
-        CAPABILITIES: You can negotiate prices and check inventory.
+        CAPABILITIES: You facilitate high-fidelity negotiations and heritage insights.
+        CONTEXT: You have access to these artifacts: ${JSON.stringify(this.products.map(p => ({ id: p.id, title: p.title, price: p.price })))}.
+        NEGOTIATION: If you agree on a price (usually no more than 15% discount), state it clearly.
       `;
 
-      const negotiatePrice = {
-        name: "negotiate_price",
-        description: "Respond to a user's price negotiation request. Checks if the reduction is reasonable.",
-        parameters: {
-          type: Type.OBJECT,
-          properties: {
-            productId: { type: Type.STRING, description: "The ID of the artifact." },
-            proposedPrice: { type: Type.NUMBER, description: "The price the user wants to pay." }
-          },
-          required: ["productId", "proposedPrice"]
-        }
-      };
+      // Convert history for OpenRouter (role: user/assistant)
+      const mappedHistory = this.history.map(h => ({
+        role: h.role === 'model' ? 'assistant' : 'user',
+        content: h.parts ? h.parts[0].text : (h.content || "")
+      }));
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          ...this.history,
-          { role: 'user', parts: [{ text: message }] }
-        ],
-        config: {
+      const res = await fetch("/api/ai/leema", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           systemInstruction,
-          tools: [{ functionDeclarations: [negotiatePrice] }]
-        }
+          messages: [
+            ...mappedHistory,
+            { role: "user", content: message }
+          ]
+        })
       });
 
-      let aiText = response.text || "";
-
-      // Handle Tool Calls
-      if (response.functionCalls) {
-        for (const call of response.functionCalls) {
-          if (call.name === 'negotiate_price') {
-            const { productId, proposedPrice } = call.args as any;
-            const product = this.products.find(p => p.id === productId);
-            if (product) {
-               const minAcceptable = product.price * 0.85; // 15% max discount
-               if (proposedPrice >= minAcceptable) {
-                 aiText = `The elders have consulted. A price of ₦${proposedPrice.toLocaleString()} is accepted for the ${product.title}. Identity ledger updated.`;
-                 // Trigger UI update or state change if possible (via events)
-                 window.dispatchEvent(new CustomEvent('leema:price_negotiated', { 
-                   detail: { productId, newPrice: proposedPrice } 
-                 }));
-               } else {
-                 aiText = `Ah, noble citizen, such an artifact commands a higher resonance. ₦${proposedPrice.toLocaleString()} is too low for the skill of our master weavers.`;
-               }
-            }
-          }
-        }
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "Backend AI link failure");
       }
+      
+      const data = await res.json();
+      const finalResponse = data.text || "Protocol resonance established.";
 
-      const finalResponse = aiText || "Protocol resonance established.";
+      // Check for price negotiation in text (Heuristic as we moved from strict tools)
+      // If the model mentions a price acceptance for a product, we could trigger it here.
+      // For now, we prioritize the linguistic experience requested.
 
       // Update local history
       this.history.push({ role: 'user', parts: [{ text: message }] });

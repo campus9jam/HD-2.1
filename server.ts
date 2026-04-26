@@ -1,8 +1,8 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
+import { OpenRouter } from "@openrouter/sdk";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,6 +12,42 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+
+  // MODULE 3: AI & INTELLIGENCE (LEEMA BRAIN)
+  app.post("/api/ai/leema", async (req, res) => {
+    try {
+      const { messages, systemInstruction } = req.body;
+      const apiKey = process.env.OPENROUTER_API_KEY;
+      const model = process.env.OPENROUTER_MODEL || "google/gemma-4-31b-it:free";
+
+      if (!apiKey) {
+        throw new Error("OPENROUTER_API_KEY is missing from environment");
+      }
+
+      const openrouter = new OpenRouter({ apiKey });
+
+      const response = await openrouter.chat.send({
+        model,
+        messages: [
+          { role: "system", content: systemInstruction },
+          ...messages
+        ]
+      });
+
+      if (response.usage) {
+        console.log(`[Leema Intelligence] Reasoning Tokens: ${(response.usage as any).reasoning_tokens || "N/A"}`);
+      }
+
+      const aiText = response.choices[0]?.message?.content || "";
+      res.json({ text: aiText });
+    } catch (error: any) {
+      console.error("[Leema Brain Error]:", error.message);
+      res.status(500).json({ 
+        error: "Brain resonance lost",
+        message: error.message 
+      });
+    }
+  });
 
   // MODULE 2: PAYMENT ORCHESTRATION (SECURE HANDLERS)
   
@@ -94,6 +130,7 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
