@@ -100,15 +100,6 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
-    
-    // SPA fallback: for any unmatched route, serve index.html
-    app.use((req, res, next) => {
-      if (req.method === "GET" && !req.path.startsWith("/api")) {
-        res.redirect(307, "/");
-      } else {
-        next();
-      }
-    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
