@@ -100,9 +100,17 @@ async function startServer() {
     });
     app.use(vite.middlewares);
     
-    // Fallback to index.html for SPA routing
-    app.get('*', (req, res) => {
-      res.redirect('/');
+    // Fallback to index.html for SPA routing (send the HTML directly)
+    app.get('*', async (req, res) => {
+      try {
+        const url = req.originalUrl;
+        let template = require('fs').readFileSync(path.join(__dirname, 'index.html'), 'utf-8');
+        template = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e) {
+        console.error('Error serving index.html:', e);
+        res.status(500).end(e.message);
+      }
     });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
