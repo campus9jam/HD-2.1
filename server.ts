@@ -100,6 +100,16 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
+    
+    // SPA fallback: serve index.html for all non-API routes
+    app.use((req, res, next) => {
+      if (!req.path.startsWith("/api")) {
+        res.type("text/html");
+        res.sendFile(path.join(__dirname, "index.html"));
+      } else {
+        next();
+      }
+    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
