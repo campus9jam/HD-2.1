@@ -60,7 +60,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: user.email || '',
             statusTier: 'Citizen',
             role: 'citizen',
+            tier: 'Explorer',
             xp: 0,
+            leeBalance: 0,
+            reputationScore: 0,
+            stakedBalance: 0,
+            lastYieldClaim: serverTimestamp(),
             identities: []
           };
           await setDoc(profileRef, { 

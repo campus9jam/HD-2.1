@@ -21,7 +21,7 @@ import { extractAtelierDataFromText } from '../lib/atelierUtils';
 import { unlockAchievement } from '../lib/achievementUtils';
 import { toast } from 'sonner';
 import { createAtelierOrder, fetchAtelierClient } from '../services/AtelierService';
-import { uploadToDrive, openPicker } from '../services/GoogleDriveService';
+import { uploadToDropbox, openPicker } from '../services/DropboxService';
 
 export default function AtelierOrderWizardView() {
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ export default function AtelierOrderWizardView() {
     depositPaid: false,
     balancePaid: false,
     imageDataUrls: [],
-    driveFiles: [],
+    vaultMedia: [],
     measurements: {
       bustChest: '', waist: '', hips: '', length: '', shoulder: '', sleeve: '',
       armhole: '', neck: '', thigh: '', knee: '', cuff: '', additional: ''
@@ -63,12 +63,12 @@ export default function AtelierOrderWizardView() {
       setIsUploading(true);
       const uploadPromises = Array.from(files).map(async file => {
         try {
-          const driveFile = await uploadToDrive(file);
+          const dropboxFile = await uploadToDropbox(file);
           return {
-            id: driveFile.id,
-            name: driveFile.name,
+            id: dropboxFile.id,
+            name: dropboxFile.name,
             type: file.type,
-            url: driveFile.webContentLink
+            url: dropboxFile.webContentLink
           };
         } catch (err) {
           toast.error(`Failed to upload ${file.name} to sovereign storage`);
@@ -81,30 +81,30 @@ export default function AtelierOrderWizardView() {
       
       setOrder(prev => ({
         ...prev,
-        driveFiles: [...(prev.driveFiles || []), ...validResults]
+        vaultMedia: [...(prev.vaultMedia || []), ...validResults]
       }));
       setIsUploading(false);
-      toast.success('Media Archival Complete', { description: `${validResults.length} assets offloaded to Drive.` });
+      toast.success('Media Archival Complete', { description: `${validResults.length} assets offloaded to Dropbox.` });
     }
   };
 
   const handlePickerSelect = async () => {
     try {
       await openPicker((selectedFiles: any[]) => {
-        const driveFiles = selectedFiles.map(f => ({
+        const vaultMedia = selectedFiles.map(f => ({
           id: f.id,
           name: f.name,
-          type: f.mimeType,
-          url: f.url
+          type: f.mimeType || 'application/octet-stream',
+          url: f.webViewLink
         }));
         setOrder(prev => ({
           ...prev,
-          driveFiles: [...(prev.driveFiles || []), ...driveFiles]
+          vaultMedia: [...(prev.vaultMedia || []), ...vaultMedia]
         }));
-        toast.success(`${driveFiles.length} Archive Nodes Linked`);
+        toast.success(`${vaultMedia.length} Archive Nodes Linked`);
       });
     } catch (err) {
-      toast.error('GAPI Error', { description: 'Could not initialize archive picker.' });
+      toast.error('Dropbox Error', { description: 'Could not initialize archive picker.' });
     }
   };
 
@@ -325,11 +325,11 @@ export default function AtelierOrderWizardView() {
                       className="text-[9px] uppercase font-black text-gold/60 hover:text-gold flex items-center gap-1 transition-colors"
                     >
                       <Database className="w-3 h-3" />
-                      Browse Drive Archive
+                      Browse Dropbox Archive
                     </button>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
-                     {order.driveFiles?.map((file, i) => (
+                     {order.vaultMedia?.map((file, i) => (
                         <div key={i} className="aspect-square rounded-2xl overflow-hidden border border-text/10 group relative">
                            <img src={file.url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                            <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

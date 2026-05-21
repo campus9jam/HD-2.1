@@ -13,7 +13,7 @@ export interface Order {
   id: string;
   items: any[];
   totalValue: number;
-  status: 'secured' | 'inbound' | 'transit' | 'archived';
+  status: 'secured' | 'inbound' | 'transit' | 'archived' | 'finalized';
   timestamp: string;
   buyerId?: string;
   logistics?: LogisticsEvent[];

@@ -9,7 +9,8 @@ import {
   TrendingUp, 
   Scale,
   Plus,
-  Clock
+  Clock,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -79,22 +80,22 @@ export default function GovernanceView() {
          <div className="luxury-card p-10 bg-gold/5 border-gold/20 flex flex-col items-center text-center gap-4">
             <Users className="w-6 h-6 text-gold" />
             <div>
-               <p className="text-3xl font-serif text-text italic">Active</p>
-               <p className="text-[9px] uppercase font-black text-text/20 tracking-widest mt-1">Voting Weight</p>
+               <p className="text-3xl font-serif text-text italic">{profile?.reputationScore || 0}</p>
+               <p className="text-[9px] uppercase font-black text-text/20 tracking-widest mt-1">Reputation Weight</p>
             </div>
          </div>
          <div className="luxury-card p-10 bg-surface/50 border-text/5 flex flex-col items-center text-center gap-4">
             <TrendingUp className="w-6 h-6 text-text/20" />
             <div>
-               <p className="text-3xl font-serif text-text italic">1.2x</p>
+               <p className="text-3xl font-serif text-text italic">+{Math.floor((profile?.xp || 0) / 1000)}%</p>
                <p className="text-[9px] uppercase font-black text-text/20 tracking-widest mt-1">XP Resonance</p>
             </div>
          </div>
          <div className="luxury-card p-10 bg-surface/50 border-text/5 flex flex-col items-center text-center gap-4">
-            <ShieldCheck className="w-6 h-6 text-text/20" />
+            <Sparkles className="w-6 h-6 text-text/20" />
             <div>
-               <p className="text-3xl font-serif text-text italic">Elite</p>
-               <p className="text-[9px] uppercase font-black text-text/20 tracking-widest mt-1">Verification Status</p>
+               <p className="text-3xl font-serif text-text italic">{profile?.tier || 'Explorer'}</p>
+               <p className="text-[9px] uppercase font-black text-text/20 tracking-widest mt-1">Consensus Access</p>
             </div>
          </div>
       </section>

@@ -24,7 +24,7 @@ import {
 } from '../services/CommunityService';
 
 // Official Sovereign Channel ID for House of Daraja
-const CHANNEL_ID = "UC8O2_6f6tX9_K6kX_Y0I_XQ"; 
+const CHANNEL_ID = "UCCByL2H6pKz1p4vtcFuPhbA"; 
 
 export default function CommunityView() {
   const { user, profile, isAdmin } = useAuth();
@@ -261,6 +261,7 @@ export default function CommunityView() {
                         alt={video.title} 
                         className="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000"
                         referrerPolicy="no-referrer"
+                        loading="lazy"
                      />
                      <div className="absolute inset-0 flex items-center justify-center bg-navy/40 opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="p-8 bg-gold text-navy rounded-full shadow-[0_0_60px_rgba(212,175,55,0.4)] transform scale-50 group-hover:scale-100 transition-transform duration-500">

@@ -20,6 +20,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <motion.img 
           src={product.media[0]} 
           alt={product.title} 
+          loading="lazy"
           className="w-full h-full object-cover grayscale brightness-90 transition-all duration-1000 group-hover:grayscale-0"
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}

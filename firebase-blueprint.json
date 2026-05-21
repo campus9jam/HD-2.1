@@ -10,8 +10,11 @@
         "email": { "type": "string", "format": "email" },
         "photoURL": { "type": "string" },
         "statusTier": { "type": "string", "enum": ["Citizen", "Gold", "Platinum", "Diamond Elite"] },
+        "tier": { "type": "string", "enum": ["Explorer", "Insider", "Collector", "Elite", "Icon"] },
         "role": { "type": "string", "enum": ["citizen", "contributor", "admin"] },
         "xp": { "type": "integer" },
+        "leeBalance": { "type": "integer" },
+        "reputationScore": { "type": "integer" },
         "identities": { "type": "array", "items": { "type": "string" } },
         "communicationChannels": { "type": "array", "items": { "type": "string", "enum": ["Email", "WhatsApp", "Discord", "Neural_Native"] } },
         "savedAddresses": { "type": "array", "items": { "type": "object", "properties": { "label": { "type": "string" }, "address": { "type": "string" } } } },
@@ -32,7 +35,7 @@
         "price": { "type": "number" },
         "currency": { "type": "string" },
         "media": { "type": "array", "items": { "type": "string" } },
-        "category": { "type": "string", "enum": ["Heritage", "Streetwear", "Marketplace", "Accessories"] },
+        "category": { "type": "string", "enum": ["Heritage", "Streetwear", "Marketplace", "Accessories", "Materials"] },
         "stock": { "type": "integer" },
         "tags": { "type": "array", "items": { "type": "string" } },
         "vendorId": { "type": "string" },
@@ -196,12 +199,147 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["proposalId", "userId", "weight"]
+    },
+    "AuctionDrop": {
+      "title": "Sovereign Drop",
+      "description": "High-fidelity auction drop for limited-run artifacts.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "productId": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "img": { "type": "string" },
+        "type": { "type": "string", "enum": ["timed", "flash", "live"] },
+        "startTime": { "type": "string", "format": "date-time" },
+        "endTime": { "type": "string", "format": "date-time" },
+        "startingBid": { "type": "number" },
+        "currentBid": { "type": "number" },
+        "bidCount": { "type": "integer" },
+        "reservePrice": { "type": "number" },
+        "buyNowPrice": { "type": "number" },
+        "minIncrement": { "type": "number" },
+        "status": { "type": "string", "enum": ["upcoming", "active", "ended", "disputed"] },
+        "streamUrl": { "type": "string" },
+        "bids": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "winnerId": { "type": "string" },
+        "escrowStatus": { "type": "string", "enum": ["none", "held", "released", "refunded"] }
+      },
+      "required": ["title", "productId", "startTime", "endTime", "status", "startingBid", "type"]
+    },
+    "Wallet": {
+      "title": "Sovereign Wallet",
+      "description": "Digital vault for citizen assets and transaction buffers.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "balance": { "type": "number" },
+        "leeBalance": { "type": "number" },
+        "escrowBalance": { "type": "number" },
+        "currency": { "type": "string" },
+        "tier": { "type": "string", "enum": ["Explorer", "Insider", "Collector", "Elite", "Icon"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "balance", "escrowBalance"]
+    },
+    "WalletTransaction": {
+      "title": "Ledger Entry",
+      "description": "Immutable record of a financial state transition.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "leeAmount": { "type": "number" },
+        "type": { "type": "string", "enum": ["deposit", "withdrawal", "payment", "escrow_hold", "escrow_release", "refund", "lee_reward", "lee_burn", "delivery_subsidy", "creator_tip", "social_gift"] },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+        "referenceId": { "type": "string" },
+        "metadata": { "type": "object" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amount", "type", "status", "timestamp"]
+    },
+    "AuctionComment": {
+      "title": "Social Signal",
+      "description": "Real-time communication within an auction node.",
+      "type": "object",
+      "properties": {
+        "auctionId": { "type": "string" },
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "message": { "type": "string" },
+        "reactions": { "type": "object" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["auctionId", "userId", "message", "timestamp"]
+    },
+    "RewardCampaign": {
+      "title": "Reward Protocol",
+      "description": "Configurable campaign for ecosystem engagement multiplication.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["auction_participation", "livestream_attendance", "purchase_streak", "referral", "content_creation"] },
+        "leeReward": { "type": "integer" },
+        "xpReward": { "type": "integer" },
+        "multiplier": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "endsAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "type", "leeReward", "isActive"]
+    },
+    "DeliverySubsidy": {
+      "title": "Logistic Support Node",
+      "description": "Calculated reduction in delivery friction via LEE burn.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderId": { "type": "string" },
+        "userId": { "type": "string" },
+        "leeBurned": { "type": "integer" },
+        "fiatSaved": { "type": "number" },
+        "type": { "type": "string", "enum": ["standard", "priority", "same_day_boost"] },
+        "aiRecommended": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["orderId", "userId", "leeBurned", "fiatSaved"]
+    },
+    "SocialGift": {
+      "title": "Communal Node Transfer",
+      "description": "Peer-to-peer asset movement within the social grid.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "receiverName": { "type": "string" },
+        "leeAmount": { "type": "integer" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["tip", "gift", "subsidy_share"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "receiverId", "leeAmount", "type"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "UserProfile",
       "description": "Sovereign identity profile for each citizen."
+    },
+    "/wallets/{walletId}": {
+      "schema": "Wallet",
+      "description": "Secured financial vaults connected to identities."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "WalletTransaction",
+      "description": "Global financial ledger of all sovereign transfers."
     },
     "/products/{productId}": {
       "schema": "Product",
@@ -238,6 +376,26 @@
     "/governance_votes/{voteId}": {
       "schema": "GovernanceVote",
       "description": "Individual citizen votes recorded in the ledger."
+    },
+    "/auctions/{auctionId}": {
+      "schema": "AuctionDrop",
+      "description": "Live auction nodes for high-status artifact drops."
+    },
+    "/auction_comments/{commentId}": {
+      "schema": "AuctionComment",
+      "description": "Real-time communication stream for social commerce."
+    },
+    "/reward_campaigns/{campaignId}": {
+      "schema": "RewardCampaign",
+      "description": "Active incentive protocols for ecosystem engagement."
+    },
+    "/delivery_subsidies/{subsidyId}": {
+      "schema": "DeliverySubsidy",
+      "description": "Ledger of logistics friction reduction events."
+    },
+    "/social_gifts/{giftId}": {
+      "schema": "SocialGift",
+      "description": "Social asset transfers and creator support events."
     }
   }
 }

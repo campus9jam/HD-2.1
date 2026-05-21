@@ -15,6 +15,7 @@ import { db, handleFirestoreError } from '../lib/firebase';
 import { AtelierOrder, AtelierClient } from '../types';
 import { CacheService } from './CacheService';
 import { firestoreLimiter } from '../lib/rateLimit';
+import { rewardLee } from './LeeEconomyService';
 
 /**
  * Atelier Service - Manages bespoke fabrication nodes in the cloud ledger.
@@ -64,6 +65,12 @@ export const createAtelierOrder = async (order: Omit<AtelierOrder, 'id'>) => {
     });
     await CacheService.delete(`orders_${order.clientUsername}`);
     await CacheService.delete('all_atelier_orders');
+
+    // Reward for commissioning a piece
+    if (order.clientUsername) {
+        await rewardLee(order.clientUsername, 250, 'lee_reward', { reason: 'Atelier Commission' }).catch(console.error);
+    }
+
     return docRef.id;
   } catch (error) {
     return handleFirestoreError(error, 'create', 'atelier_orders');

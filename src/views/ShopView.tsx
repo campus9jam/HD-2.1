@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, ChevronRight, X, Heart, Database } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { Sparkles, Search, ChevronRight, X, Heart, Database, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../contexts/WishlistContext';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -8,10 +9,12 @@ import { db } from '../lib/firebase';
 import { CacheService } from '../services/CacheService';
 
 export default function ShopView() {
+  const { profile, user } = useAuth();
   const [activeCategory, setActiveCategory] = useState('All');
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [leeOnly, setLeeOnly] = useState(false);
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isOfflineData, setIsOfflineData] = useState(false);
@@ -55,7 +58,13 @@ export default function ShopView() {
   }, [activeCategory]);
 
   const filteredItems = items.filter(item => {
-    return item.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLee = !leeOnly || item.price > 10000;
+    return matchesSearch && matchesLee;
+  }).sort((a, b) => {
+    if (a.isBoosted && !b.isBoosted) return -1;
+    if (!a.isBoosted && b.isBoosted) return 1;
+    return 0;
   });
 
   return (
@@ -67,6 +76,12 @@ export default function ShopView() {
       {/* Marketplace Header */}
       <header className="p-8 flex flex-col items-center gap-10">
          <div className="flex items-center justify-between w-full h-10">
+            {user && (
+              <div className="hidden lg:flex items-center gap-4 px-4 py-1 bg-gold/10 rounded-full border border-gold/10">
+                 <Wallet className="w-3 h-3 text-gold" />
+                 <span className="text-[10px] font-black uppercase text-gold">{(profile?.leeBalance || 0).toLocaleString()} LEE</span>
+              </div>
+            )}
             {!isSearchVisible ? (
               <>
                 <div className="w-10"></div> {/* Spacer */}
@@ -115,6 +130,7 @@ export default function ShopView() {
                alt="Textiles Exclusive" 
                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 grayscale brightness-75"
                referrerPolicy="no-referrer"
+               loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/20 to-transparent"></div>
             <div className="absolute inset-y-0 left-10 flex flex-col justify-center">
@@ -129,7 +145,7 @@ export default function ShopView() {
       {/* Grid Content */}
       <main className="px-8 space-y-12">
          {/* Filter Sub-Header */}
-         <div className="flex gap-8 overflow-x-auto no-scrollbar border-b border-text/5 pb-4">
+         <div className="flex gap-8 overflow-x-auto no-scrollbar border-b border-text/5 pb-4 items-center">
             {categories.map(cat => (
                <button 
                  key={cat} 
@@ -139,6 +155,15 @@ export default function ShopView() {
                   {cat}
                </button>
             ))}
+            <div className="ml-auto pl-4 border-l border-text/5 flex items-center gap-3">
+               <button 
+                 onClick={() => setLeeOnly(!leeOnly)}
+                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${leeOnly ? 'bg-gold/20 border-gold text-gold' : 'bg-text/5 border-text/10 text-text/30'}`}
+               >
+                  <Sparkles className="w-3 h-3" />
+                  <span className="text-[8px] font-black uppercase tracking-widest leading-none">LEE_Protocols</span>
+               </button>
+            </div>
          </div>
 
          {/* Product Grid */}
@@ -162,6 +187,7 @@ export default function ShopView() {
                           alt={item.title} 
                           className="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" 
                           referrerPolicy="no-referrer"
+                          loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                         {item.price > 40000 && (
@@ -169,6 +195,11 @@ export default function ShopView() {
                               <span className="text-[7px] font-black uppercase text-navy tracking-[0.2em]">Negotiable</span>
                            </div>
                         )}
+                        <div className="absolute bottom-4 left-4 flex gap-2">
+                           <div className="p-2 bg-navy/60 backdrop-blur-md border border-gold/20 rounded-full">
+                              <Sparkles className="w-3 h-3 text-gold" />
+                           </div>
+                        </div>
                         <button 
                            onClick={(e) => {
                              e.preventDefault();

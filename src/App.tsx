@@ -1,5 +1,5 @@
 import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { CartProvider, useCart } from './contexts/CartContext';
@@ -7,34 +7,40 @@ import BottomNav from './components/BottomNav';
 import OfflineNotice from './components/OfflineNotice';
 import { WishlistProvider, useWishlist } from './contexts/WishlistContext';
 import { OrderProvider } from './contexts/OrderContext';
-import HomeView from './views/HomeView';
-import MarketplaceView from './views/MarketplaceView';
-import ShopView from './views/ShopView';
-import ProfileView from './views/ProfileView';
-import DropView from './views/DropView';
-import HeritageView from './views/HeritageView';
-import CommunityView from './views/CommunityView';
-import CartView from './views/CartView';
-import CheckoutView from './views/CheckoutView';
-import SearchView from './views/SearchView';
-import SavedItemsView from './views/SavedItemsView';
-import OrdersView from './views/OrdersView';
-import RewardsView from './views/RewardsView';
-import ProductDetailView from './views/ProductDetailView';
-import VendorDashboardView from './views/VendorDashboardView';
-import AdminDashboardView from './views/AdminDashboardView';
-import LoginView from './views/LoginView';
-import AtelierPortalView from './views/AtelierPortalView';
-import AtelierOrderWizardView from './views/AtelierOrderWizardView';
-import AtelierAdminView from './views/AtelierAdminView';
-import GovernanceView from './views/GovernanceView';
-import LinguisticNodeView from './views/LinguisticNodeView';
+
+// Lazy load views for optimal performance
+const HomeView = lazy(() => import('./views/HomeView'));
+const MarketplaceView = lazy(() => import('./views/MarketplaceView'));
+const ShopView = lazy(() => import('./views/ShopView'));
+const ProfileView = lazy(() => import('./views/ProfileView'));
+const DropView = lazy(() => import('./views/DropView'));
+const HeritageView = lazy(() => import('./views/HeritageView'));
+const CommunityView = lazy(() => import('./views/CommunityView'));
+const CartView = lazy(() => import('./views/CartView'));
+const CheckoutView = lazy(() => import('./views/CheckoutView'));
+const SearchView = lazy(() => import('./views/SearchView'));
+const SavedItemsView = lazy(() => import('./views/SavedItemsView'));
+const OrdersView = lazy(() => import('./views/OrdersView'));
+const RewardsView = lazy(() => import('./views/RewardsView'));
+const ProductDetailView = lazy(() => import('./views/ProductDetailView'));
+const VendorDashboardView = lazy(() => import('./views/VendorDashboardView'));
+const AdminDashboardView = lazy(() => import('./views/AdminDashboardView'));
+const LoginView = lazy(() => import('./views/LoginView'));
+const AtelierPortalView = lazy(() => import('./views/AtelierPortalView'));
+const AtelierOrderWizardView = lazy(() => import('./views/AtelierOrderWizardView'));
+const AtelierAdminView = lazy(() => import('./views/AtelierAdminView'));
+const GovernanceView = lazy(() => import('./views/GovernanceView'));
+const LinguisticNodeView = lazy(() => import('./views/LinguisticNodeView'));
+const WalletView = lazy(() => import('./views/WalletView'));
+const SellerStudioView = lazy(() => import('./views/SellerStudioView'));
+const LiveAuctionRoomView = lazy(() => import('./views/LiveAuctionRoomView'));
 import { AnimatePresence, motion } from 'motion/react';
 import { ShoppingBag, Search, ShieldAlert, Sparkles } from 'lucide-react';
 import LanguageSelector from './components/LanguageSelector';
 import ThemeToggle from './components/ThemeToggle';
 import ProtectedRoute from './components/ProtectedRoute';
 import LeemaWidget from './components/LeemaWidget';
+import NotificationBell from './components/NotificationBell';
 import { Toaster, toast } from 'sonner';
 import { CacheService } from './services/CacheService';
 import { SyncService } from './services/SyncService';
@@ -81,8 +87,12 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
           transition={{ duration: 0.8 }}
           className="flex flex-col items-center gap-6"
         >
-          <div className="w-32 h-32 bg-gold/5 rounded-[2.5rem] flex items-center justify-center border border-gold/20 shadow-[0_40px_80px_rgba(212,175,55,0.1)] relative group">
-            <Sparkles className="w-12 h-12 text-gold animate-pulse" />
+          <div className="w-32 h-32 bg-gold/5 rounded-[2.5rem] flex items-center justify-center border border-gold/20 shadow-[0_40px_80px_rgba(212,175,55,0.1)] relative group overflow-hidden">
+            <img 
+              src="https://i.imgur.com/Fy9UYJ4.png" 
+              alt="House of Daraja" 
+              className="w-20 h-20 object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] animate-pulse" 
+            />
             <motion.div 
               animate={{ rotate: 360 }}
               transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
@@ -134,6 +144,24 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
          Kano // Lagos // Zaria // London
       </div>
     </motion.div>
+  );
+}
+
+function ViewLoader() {
+  return (
+    <div className="flex-grow flex items-center justify-center p-12 bg-navy">
+      <div className="flex flex-col items-center gap-6">
+        <Sparkles className="w-8 h-8 text-gold animate-pulse" />
+        <div className="w-32 h-0.5 bg-text/5 rounded-full overflow-hidden">
+          <motion.div 
+            initial={{ x: "-100%" }}
+            animate={{ x: "100%" }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+            className="h-full w-full bg-gold"
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -202,14 +230,17 @@ function AppContent() {
           <div className="fixed inset-0 pointer-events-none z-40 bg-[radial-gradient(circle_at_50%_40%,transparent_0%,rgba(0,0,0,0.1)_100%)] mix-blend-multiply opacity-50 dark:opacity-100 dark:bg-[radial-gradient(circle_at_50%_40%,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
           
           {/* Persistent Top Bar */}
-          <header className="flex items-center justify-between px-6 py-8 z-30 bg-navy/80 backdrop-blur-xl border-b border-[var(--border)]">
-             <button className="p-2 text-text/30 hover:text-gold transition-colors">
-                <BridgeIcon className="w-6 h-6 text-gold" />
-             </button>
-             
-             <Link to="/" className="flex flex-col items-center group">
-                <span className="text-2xl font-serif text-text tracking-[0.2em] font-black leading-none mb-0.5">HD</span>
-                <span className="text-[7px] uppercase tracking-[0.6em] text-gold font-black opacity-80">WEAR YOU WORTH</span>
+          <header className="flex items-center justify-between px-4 md:px-6 z-30 bg-navy/80 backdrop-blur-xl border-b border-[var(--border)] h-20 md:h-24">
+             <Link to="/" className="h-full flex items-center gap-3 md:gap-4 group">
+                <img 
+                   src="https://i.imgur.com/Fy9UYJ4.png" 
+                   alt="House of Daraja" 
+                   className="h-full w-auto py-2 object-contain filter drop-shadow-[0_0_12px_rgba(212,175,55,0.4)] transition-transform group-hover:scale-105" 
+                />
+                <div className="flex flex-col">
+                   <span className="text-xl md:text-2xl font-serif text-text tracking-[0.1em] font-black leading-none mb-0.5 group-hover:text-gold transition-colors">Daraja</span>
+                   <span className="text-[6px] md:text-[7px] uppercase tracking-[0.6em] text-gold font-black opacity-80">WEAR YOUR WORTH</span>
+                </div>
              </Link>
              
              <div className="flex items-center gap-2">
@@ -222,6 +253,7 @@ function AppContent() {
                 <Link to="/search" className="p-2 text-text/40 hover:text-gold transition-colors">
                    <Search className="w-5 h-5" />
                 </Link>
+                <NotificationBell />
                 <ThemeToggle />
              </div>
           </header>
@@ -229,71 +261,84 @@ function AppContent() {
           <OfflineNotice />
           
           <main className="flex-grow overflow-y-auto relative pb-32 no-scrollbar z-20">
-            <AnimatePresence mode="wait">
-              <Routes>
-                <Route path="/" element={<HomeView />} />
-                <Route path="/marketplace" element={<MarketplaceView />} />
-                <Route path="/shop" element={<ShopView />} />
-                <Route path="/login" element={<LoginView />} />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <ProfileView />
-                  </ProtectedRoute>
-                } />
-                <Route path="/drops" element={<DropView />} />
-                <Route path="/heritage" element={<HeritageView />} />
-                <Route path="/community" element={<CommunityView />} />
-                <Route path="/cart" element={<CartView />} />
-                <Route path="/checkout" element={
-                  <ProtectedRoute>
-                    <CheckoutView />
-                  </ProtectedRoute>
-                } />
-                <Route path="/search" element={<SearchView />} />
-                <Route path="/saved" element={
-                  <ProtectedRoute>
-                    <SavedItemsView />
-                  </ProtectedRoute>
-                } />
-                <Route path="/orders" element={
-                  <ProtectedRoute>
-                    <OrdersView />
-                  </ProtectedRoute>
-                } />
-                <Route path="/rewards" element={
-                  <ProtectedRoute>
-                    <RewardsView />
-                  </ProtectedRoute>
-                } />
-                <Route path="/product/:id" element={<ProductDetailView />} />
-                <Route path="/vendor/dashboard" element={
-                  <ProtectedRoute>
-                    <VendorDashboardView />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/dashboard" element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminDashboardView />
-                  </ProtectedRoute>
-                } />
-                <Route path="/atelier" element={<AtelierPortalView />} />
-                <Route path="/atelier/order" element={
-                  <ProtectedRoute>
-                    <AtelierOrderWizardView />
-                  </ProtectedRoute>
-                } />
-                <Route path="/atelier/admin" element={
-                  <ProtectedRoute requireAdmin>
-                    <AtelierAdminView />
-                  </ProtectedRoute>
-                } />
-                <Route path="/governance" element={<GovernanceView />} />
-                <Route path="/neural" element={<LinguisticNodeView />} />
-              </Routes>
-            </AnimatePresence>
+            <Suspense fallback={<ViewLoader />}>
+              <AnimatePresence mode="wait">
+                <Routes>
+                  <Route path="/" element={<HomeView />} />
+                  <Route path="/marketplace" element={<MarketplaceView />} />
+                  <Route path="/shop" element={<ShopView />} />
+                  <Route path="/login" element={<LoginView />} />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <ProfileView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/drops" element={<DropView />} />
+                  <Route path="/heritage" element={<HeritageView />} />
+                  <Route path="/community" element={<CommunityView />} />
+                  <Route path="/cart" element={<CartView />} />
+                  <Route path="/checkout" element={
+                    <ProtectedRoute>
+                      <CheckoutView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/search" element={<SearchView />} />
+                  <Route path="/saved" element={
+                    <ProtectedRoute>
+                      <SavedItemsView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/orders" element={
+                    <ProtectedRoute>
+                      <OrdersView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/rewards" element={
+                    <ProtectedRoute>
+                      <RewardsView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/product/:id" element={<ProductDetailView />} />
+                  <Route path="/vendor/dashboard" element={
+                    <ProtectedRoute>
+                      <VendorDashboardView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/dashboard" element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminDashboardView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/atelier" element={<AtelierPortalView />} />
+                  <Route path="/atelier/order" element={
+                    <ProtectedRoute>
+                      <AtelierOrderWizardView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/atelier/admin" element={
+                    <ProtectedRoute requireAdmin>
+                      <AtelierAdminView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/governance" element={<GovernanceView />} />
+                  <Route path="/neural" element={<LinguisticNodeView />} />
+                  <Route path="/wallet" element={
+                    <ProtectedRoute>
+                      <WalletView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/seller-studio" element={
+                    <ProtectedRoute>
+                      <SellerStudioView />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/live-auction/:auctionId" element={<LiveAuctionRoomView />} />
+                </Routes>
+              </AnimatePresence>
+            </Suspense>
 
             {/* Global Sovereign Footer */}
-            <footer className="mt-20 p-12 bg-surface/30 border-t border-[var(--border)] space-y-12">
+            <footer className="mt-20 p-6 md:p-12 bg-surface/30 border-t border-[var(--border)] space-y-12">
                <div className="flex flex-col md:flex-row justify-between gap-12">
                   <div className="space-y-6 max-w-xs">
                      <div className="flex flex-col items-start gap-1">

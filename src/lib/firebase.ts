@@ -2,10 +2,22 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, initializeFirestore } from 'firebase/firestore';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// Module 0: Google Analytics
+export let analytics: any;
+if (typeof window !== 'undefined') {
+  isSupported().then(yes => {
+    if (yes) {
+      analytics = getAnalytics(app);
+      console.log("House of Daraja: Analytics node active.");
+    }
+  });
+}
 
 // Connectivity Fix for sandboxed environments: Experimental Long Polling
 // We use a combination of settings that are known to work in restricted preview environments.

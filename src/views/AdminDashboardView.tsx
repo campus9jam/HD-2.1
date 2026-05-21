@@ -13,10 +13,21 @@ import {
   Activity,
   Server,
   Lock,
-  Cpu
+  Cpu,
+  Coins,
+  TrendingDown,
+  TrendingUp,
+  History
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchAllUsers, updateUserRole, fetchPlatformAnalytics, fetchConnectionLogs, fetchSystemLogs } from '../services/GovernanceService';
+import { 
+  fetchAllUsers, 
+  updateUserRole, 
+  fetchPlatformAnalytics, 
+  fetchConnectionLogs, 
+  fetchSystemLogs,
+  fetchEconomyMetrics
+} from '../services/GovernanceService';
 import { fetchCommunityVideos, updateVideoStatus, CommunityVideo } from '../services/CommunityService';
 import { UserProfile } from '../types';
 
@@ -27,9 +38,10 @@ export default function AdminDashboardView() {
   const [pendingVideos, setPendingVideos] = useState<CommunityVideo[]>([]);
   const [connectionLogs, setConnectionLogs] = useState<any[]>([]);
   const [systemLogs, setSystemLogs] = useState<any[]>([]);
+  const [economyMetrics, setEconomyMetrics] = useState<any>(null);
   const [analytics, setAnalytics] = useState(analyticsPlaceholder);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'governance' | 'moderation' | 'analytics'>('governance');
+  const [activeTab, setActiveTab] = useState<'governance' | 'moderation' | 'analytics' | 'economy'>('governance');
   const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState<string | null>(null);
 
@@ -45,12 +57,13 @@ export default function AdminDashboardView() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [userData, videoData, analyticsData, connections, sLogs] = await Promise.all([
+    const [userData, videoData, analyticsData, connections, sLogs, ecoData] = await Promise.all([
       fetchAllUsers(),
       fetchCommunityVideos(true),
       fetchPlatformAnalytics(),
       fetchConnectionLogs(),
-      fetchSystemLogs()
+      fetchSystemLogs(),
+      fetchEconomyMetrics()
     ]);
     
     setUsers(userData);
@@ -58,6 +71,7 @@ export default function AdminDashboardView() {
     setAnalytics(analyticsData);
     setConnectionLogs(connections);
     setSystemLogs(sLogs);
+    setEconomyMetrics(ecoData);
     setLoading(false);
   }, []);
 
@@ -117,7 +131,7 @@ export default function AdminDashboardView() {
            <h1 className="text-display text-text italic">Daraja <span className="italic text-gold">Governance</span></h1>
         </div>
         <div className="flex flex-wrap gap-4">
-           {['governance', 'moderation', 'analytics'].map((tab) => (
+           {['governance', 'moderation', 'analytics', 'economy'].map((tab) => (
              <button
                key={tab}
                onClick={() => setActiveTab(tab as any)}
@@ -377,6 +391,102 @@ export default function AdminDashboardView() {
                          ))}
                          {systemLogs.length === 0 && <p className="text-text/10 italic">No security exceptions chronicled. Kernel integrity maintained.</p>}
                       </div>
+                   </div>
+                </div>
+             </section>
+          )}
+
+          {activeTab === 'economy' && (
+             <section className="space-y-12">
+                <div className="flex justify-between items-center border-b border-text/5 pb-8">
+                   <div>
+                      <h3 className="text-micro">LEE Token Economy Kernel</h3>
+                      <p className="text-[10px] text-gold uppercase font-black mt-1">Autonomous burn & reward synchronization logs</p>
+                   </div>
+                   <button 
+                     onClick={() => loadData()}
+                     className="p-3 bg-gold/10 text-gold rounded-full border border-gold/20 hover:bg-gold hover:text-navy transition-all"
+                   >
+                      <Activity className="w-5 h-5" />
+                   </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                   <div className="luxury-card p-10 bg-surface/30 border-gold/20 space-y-4">
+                      <div className="flex justify-between">
+                         <Coins className="w-6 h-6 text-gold" />
+                         <TrendingUp className="w-4 h-4 text-green-500" />
+                      </div>
+                      <div>
+                         <p className="text-3xl font-serif text-text">{(economyMetrics?.totalRewarded || 0).toLocaleString()} LEE</p>
+                         <p className="text-micro text-text/40 uppercase">Total Minted/Rewarded</p>
+                      </div>
+                   </div>
+                   <div className="luxury-card p-10 bg-surface/30 border-red-500/20 space-y-4">
+                      <div className="flex justify-between">
+                         <Coins className="w-6 h-6 text-red-500" />
+                         <TrendingDown className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div>
+                         <p className="text-3xl font-serif text-text">{(economyMetrics?.totalBurned || 0).toLocaleString()} LEE</p>
+                         <p className="text-micro text-red-500/60 uppercase">Total Burnt (Deflation)</p>
+                      </div>
+                   </div>
+                   <div className="luxury-card p-10 bg-surface/30 border-blue-500/20 space-y-4">
+                      <div className="flex justify-between">
+                         <Activity className="w-6 h-6 text-blue-500" />
+                         <span className="text-[10px] font-black text-blue-400">Yield_Active</span>
+                      </div>
+                      <div>
+                         <p className="text-3xl font-serif text-text">{(economyMetrics?.totalStaked || 0).toLocaleString()} LEE</p>
+                         <p className="text-micro text-blue-500/60 uppercase">Total Staked (Locked)</p>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                   <div className="luxury-card p-10 bg-surface/30 border-gold/20 space-y-2">
+                       <p className="text-micro opacity-40 uppercase">Economic Health</p>
+                       <p className={`text-2xl font-serif ${(economyMetrics?.netCirculationChange || 0) > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {economyMetrics?.netCirculationChange > 0 ? 'Expansionary' : 'Deflationary'}
+                       </p>
+                   </div>
+                </div>
+
+                <div className="luxury-card p-12 bg-navy/50 border-text/5 space-y-10">
+                   <div className="flex items-center gap-4">
+                      <History className="w-5 h-5 text-gold/40" />
+                      <h4 className="text-[10px] uppercase font-black tracking-widest text-text/60">Monetary Log Stream</h4>
+                   </div>
+                   <div className="space-y-4 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
+                      {economyMetrics?.recentTransactions?.map((tx: any) => (
+                         <div key={tx.id} className="flex items-center justify-between p-6 bg-surface/20 rounded-2xl border border-text/5 hover:border-gold/30 transition-all">
+                            <div className="flex items-center gap-6">
+                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
+                                  tx.type.includes('burn') || tx.type.includes('subsidy') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-green-500/10 border-green-500/20 text-green-500'
+                               }`}>
+                                  {tx.type.includes('burn') ? <TrendingDown className="w-4 h-4" /> : <Coins className="w-4 h-4" />}
+                               </div>
+                               <div>
+                                  <p className="text-sm font-serif italic text-text">{tx.metadata?.reason || tx.type.replace('_', ' ').toUpperCase()}</p>
+                                  <p className="text-[9px] font-black uppercase text-text/20 tracking-widest">User_{tx.userId?.slice(-6)} • {new Date(tx.timestamp?.toDate()).toLocaleString()}</p>
+                               </div>
+                            </div>
+                            <div className="text-right">
+                               <p className={`text-xl font-serif italic ${
+                                  tx.type.includes('burn') || tx.type.includes('subsidy') ? 'text-red-500' : 'text-gold'
+                               }`}>
+                                  {tx.type.includes('burn') || tx.type.includes('subsidy') ? '-' : '+'}{tx.leeAmount || 0} LEE
+                               </p>
+                            </div>
+                         </div>
+                      ))}
+                      {(!economyMetrics?.recentTransactions || economyMetrics.recentTransactions.length === 0) && (
+                         <div className="py-20 text-center opacity-20">
+                            <Coins className="w-12 h-12 mx-auto mb-4" />
+                            <p className="text-sm italic">No economic activity detected in the current epoch.</p>
+                         </div>
+                      )}
                    </div>
                 </div>
              </section>

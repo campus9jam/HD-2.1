@@ -12,10 +12,12 @@ import {
   getDoc,
   setDoc,
   writeBatch,
-  limit
+  limit,
+  getCountFromServer
 } from 'firebase/firestore';
 import { db, handleFirestoreError } from '../lib/firebase';
 import { UserProfile } from '../types';
+import { rewardParticipation } from './LeeEconomyService';
 
 export interface Proposal {
   id: string;
@@ -71,6 +73,9 @@ export const castVote = async (proposalId: string, userId: string, weight: numbe
 
     await batch.commit();
 
+    // Reward civic participation
+    await rewardParticipation(userId, 'vote').catch(console.error);
+
     return true;
   } catch (error) {
     if (error instanceof Error && error.message.includes('{')) throw error;
@@ -122,11 +127,30 @@ export const updateUserRole = async (uid: string, role: string, statusTier?: str
 };
 
 export const fetchPlatformAnalytics = async () => {
+  try {
+    const usersColl = collection(db, 'users');
+    const videosColl = collection(db, 'community_videos');
+    const proposalsColl = collection(db, 'governance_proposals');
+
+    const [userCount, videoCount, proposalCount] = await Promise.all([
+      getCountFromServer(usersColl),
+      getCountFromServer(videosColl),
+      getCountFromServer(proposalsColl)
+    ]);
+
     return {
-        totalCitizens: 156,
-        totalArchivedMedia: 42,
-        pendingModeration: 8
+      totalCitizens: userCount.data().count,
+      totalArchivedMedia: videoCount.data().count,
+      pendingModeration: proposalCount.data().count // Just as an example metric
     };
+  } catch (error) {
+    console.error("Analytics failure:", error);
+    return {
+      totalCitizens: 0,
+      totalArchivedMedia: 0,
+      pendingModeration: 0
+    };
+  }
 };
 
 export const fetchConnectionLogs = async () => {
@@ -158,5 +182,61 @@ export const fetchSystemLogs = async () => {
     if (error instanceof Error && error.message.includes('{')) throw error;
     handleFirestoreError(error, 'list', 'system_logs');
     return [];
+  }
+};
+
+let cachedEconomyMetrics: any = null;
+let lastEcoFetchTime = 0;
+
+export const fetchEconomyMetrics = async () => {
+  try {
+    const now = Date.now();
+    if (cachedEconomyMetrics && now - lastEcoFetchTime < 60000) { // 60 seconds cache
+      return cachedEconomyMetrics;
+    }
+
+    const transactionsColl = collection(db, 'service_transactions');
+    
+    // Recent activity
+    const q = query(
+      transactionsColl,
+      orderBy('timestamp', 'desc'),
+      limit(50)
+    );
+    const snapshot = await getDocs(q);
+    const transactions = snapshot.docs.map(d => d.data());
+
+    // Basic aggregations
+    const burned = transactions
+      .filter((t: any) => t.type === 'lee_burn' || t.type === 'delivery_subsidy')
+      .reduce((sum, t) => sum + (t.leeAmount || 0), 0);
+    
+    const rewarded = transactions
+      .filter((t: any) => t.type === 'lee_reward' || t.type === 'attendance_reward' || t.type === 'engagement_reward')
+      .reduce((sum, t) => sum + (t.leeAmount || 0), 0);
+
+    const usersColl = collection(db, 'users');
+    const usersSnapshot = await getDocs(usersColl);
+    const totalStaked = usersSnapshot.docs.reduce((sum, d) => sum + (d.data().stakedBalance || 0), 0);
+
+    const result = {
+      totalBurned: burned,
+      totalRewarded: rewarded,
+      totalStaked: totalStaked,
+      netCirculationChange: rewarded - burned,
+      recentTransactions: snapshot.docs.map(d => ({ ...d.data(), id: d.id }))
+    };
+    
+    cachedEconomyMetrics = result;
+    lastEcoFetchTime = now;
+    return result;
+  } catch (error) {
+    console.error("Economy metrics failure:", error);
+    return {
+      totalBurned: 0,
+      totalRewarded: 0,
+      netCirculationChange: 0,
+      recentTransactions: []
+    };
   }
 };

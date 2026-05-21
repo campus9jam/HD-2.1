@@ -19,6 +19,7 @@ import {
 import { LeemaAI } from '../services/LeemaAI';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { rewardLee } from '../services/LeeEconomyService';
 
 const MOCK_PRODUCTS = [
   { id: 'p1', title: 'Kano Royal Agronun', description: 'Hand-woven silk-blend with royal embroidery.', category: 'Heritage', price: 4500 },
@@ -56,12 +57,17 @@ export default function LeemaWidget() {
     try {
       const response = await leemaRef.current?.sendMessage(userMsg);
       setMessages(prev => [...prev, { role: 'model', text: response || "Protocol sync complete." }]);
+      
+      // Reward meaningful engagement
+      if (user && userMsg.length > 10) {
+        rewardLee(user.uid, 5, 'lee_reward', { reason: 'Engaging with Leema', interaction: 'chat' }).catch(console.error);
+      }
     } catch (error) {
       setMessages(prev => [...prev, { role: 'model', text: "Linguistic reach interrupted. Please re-engage." }]);
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading]);
+  }, [input, isLoading, user]);
 
   useEffect(() => {
     const handleTrigger = (e: any) => {
@@ -78,8 +84,7 @@ export default function LeemaWidget() {
 
   useEffect(() => {
     const initLeema = async () => {
-      // @ts-expect-error - Mock products cast to proper type
-      const instance = new LeemaAI(MOCK_PRODUCTS, user?.uid || null);
+      const instance = new LeemaAI(MOCK_PRODUCTS as any, user?.uid || null);
       if (user) {
         await instance.loadHistoryFromFirestore();
       }

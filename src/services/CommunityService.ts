@@ -1,6 +1,7 @@
 import { 
   collection, 
   getDocs, 
+  getDoc,
   setDoc, 
   doc, 
   query, 
@@ -56,11 +57,21 @@ export const classifyVideoWithAI = async (title: string, currentCategory: string
   }
 };
 
+let cachedVideos: { admin: CommunityVideo[] | null, public: CommunityVideo[] | null } = { admin: null, public: null };
+let lastVideoFetch = 0;
+
 /**
  * Fetches all archived media artifacts from the sovereign database.
  */
 export const fetchCommunityVideos = async (isAdmin: boolean = false): Promise<CommunityVideo[]> => {
   try {
+    const now = Date.now();
+    const cacheKey = isAdmin ? 'admin' : 'public';
+    
+    if (cachedVideos[cacheKey] && now - lastVideoFetch < 60000) {
+      return cachedVideos[cacheKey]!;
+    }
+
     const vRef = collection(db, COLLECTION_NAME);
     let q;
     
@@ -71,7 +82,12 @@ export const fetchCommunityVideos = async (isAdmin: boolean = false): Promise<Co
     }
     
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as CommunityVideo);
+    const results = snapshot.docs.map(doc => doc.data() as CommunityVideo);
+    
+    cachedVideos[cacheKey] = results;
+    lastVideoFetch = now;
+    
+    return results;
   } catch (error) {
     if (error instanceof Error && error.message.includes('{')) throw error;
     handleFirestoreError(error, 'list', COLLECTION_NAME);
@@ -84,25 +100,23 @@ export const fetchCommunityVideos = async (isAdmin: boolean = false): Promise<Co
  * Utilizes a proxy to bypass CORS restrictions and Leema AI for enrichment.
  */
 export const syncYouTubeRSS = async (channelId: string, userId: string): Promise<void> => {
-  const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
-  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
-  
   try {
-    const response = await fetch(proxyUrl);
+    const response = await fetch(`/api/youtube/rss?channelId=${channelId}`);
     if (!response.ok) throw new Error("Manifest ingestion failed.");
     
-    const data = await response.json();
-    const xmlText = data.contents;
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(xmlText, 'text/xml');
-    const entries = Array.from(xml.querySelectorAll('entry')).slice(0, 5); // Limit to 5 per sync for prototype stability
+    const feed = await response.json();
+    const items = feed.items.slice(0, 15); // Increased to 15 for better archival depth
 
-    for (const entry of entries) {
-      const videoId = entry.querySelector('videoId')?.textContent;
+    for (const item of items) {
+      const videoId = item.youtubeId;
       if (!videoId) continue;
 
-      const title = entry.querySelector('title')?.textContent || 'Untitled Artifact';
-      const published = entry.querySelector('published')?.textContent || new Date().toISOString();
+      // Check if video already exists to avoid redundant AI enrichment
+      const existingDoc = await getDoc(doc(db, COLLECTION_NAME, videoId));
+      if (existingDoc.exists()) continue;
+
+      const title = item.title || 'Untitled Artifact';
+      const published = item.pubDate || new Date().toISOString();
 
       // Initial keyword classification
       let category: CommunityVideo['category'] = 'Uncategorized';
@@ -139,6 +153,7 @@ export const syncYouTubeRSS = async (channelId: string, userId: string): Promise
 
       await setDoc(doc(db, COLLECTION_NAME, videoId), videoData, { merge: true });
     }
+    cachedVideos = { admin: null, public: null };
   } catch (error) {
     if (error instanceof Error && error.message.includes('{')) throw error;
     handleFirestoreError(error, 'write', COLLECTION_NAME);
@@ -154,6 +169,7 @@ export const updateVideoStatus = async (videoId: string, status: CommunityVideo[
       status, 
       updatedAt: serverTimestamp() 
     }, { merge: true });
+    cachedVideos = { admin: null, public: null };
     return true;
   } catch (error) {
     if (error instanceof Error && error.message.includes('{')) throw error;

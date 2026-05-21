@@ -13,6 +13,7 @@ import { db, handleFirestoreError } from '../lib/firebase';
 import { Product } from '../types';
 import { CacheService } from './CacheService';
 import { firestoreLimiter } from '../lib/rateLimit';
+import { rewardLee } from './LeeEconomyService';
 
 export const registerArtifact = async (productData: Partial<Product>): Promise<string | null> => {
   await firestoreLimiter.acquire(2); // Higher cost for writes
@@ -27,6 +28,14 @@ export const registerArtifact = async (productData: Partial<Product>): Promise<s
       updatedAt: serverTimestamp()
     });
     
+    // Reward vendor for platform contribution
+    if (productData.vendorId) {
+      await rewardLee(productData.vendorId, 100, 'lee_reward', { 
+        reason: 'Archival Contribution', 
+        productId: docRef.id 
+      });
+    }
+
     // Invalidate caches
     await CacheService.delete('all_products');
     if (productData.vendorId) await CacheService.delete(`products_${productData.vendorId}`);
@@ -71,6 +80,40 @@ export const fetchVendorProducts = async (vendorId: string): Promise<Product[]> 
     return products;
   } catch (error) {
     return handleFirestoreError(error, 'list', 'products');
+  }
+};
+
+export const updateArtifact = async (productId: string, productData: Partial<Product>): Promise<boolean> => {
+  try {
+    const productRef = doc(db, 'products', productId);
+    await updateDoc(productRef, {
+      ...productData,
+      updatedAt: serverTimestamp()
+    });
+    
+    // Invalidate caches
+    await CacheService.delete('all_products');
+    if (productData.vendorId) await CacheService.delete(`products_${productData.vendorId}`);
+    
+    return true;
+  } catch (error) {
+    return handleFirestoreError(error, 'update', `products/${productId}`);
+  }
+};
+
+export const deleteArtifact = async (productId: string, vendorId?: string): Promise<boolean> => {
+  try {
+    const { deleteDoc } = await import('firebase/firestore');
+    const productRef = doc(db, 'products', productId);
+    await deleteDoc(productRef);
+    
+    // Invalidate caches
+    await CacheService.delete('all_products');
+    if (vendorId) await CacheService.delete(`products_${vendorId}`);
+    
+    return true;
+  } catch (error) {
+    return handleFirestoreError(error, 'delete', `products/${productId}`);
   }
 };
 

@@ -13,13 +13,16 @@ export default function MarketplaceView() {
   const [network, setNetwork] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterTier, setFilterTier] = useState<'All' | 'Gold' | 'Platinum' | 'Master'>('All');
   const [connectingIds, setConnectingIds] = useState<string[]>([]);
   const [successfulIds, setSuccessfulIds] = useState<string[]>([]);
 
-  const filteredNetwork = network.filter(u => 
-    u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.statusTier?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredNetwork = network.filter(u => {
+    const matchesSearch = u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      u.statusTier?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTier = filterTier === 'All' || u.statusTier === filterTier;
+    return matchesSearch && matchesTier;
+  });
 
   const handleRefresh = async () => {
     setLoading(true);
@@ -86,10 +89,21 @@ export default function MarketplaceView() {
          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12">
             <div className="space-y-6">
                <h1 className="text-5xl md:text-8xl font-serif text-text italic tracking-tight leading-[0.9]">Producers of <br/> <span className="text-gold">Nobility.</span></h1>
-               <p className="text-sm text-text/40 italic font-serif max-w-md leading-relaxed">
-                  Direct access to the continent's most guarded textile archives and master artisans. 
-                  Verified via the Daraja Quality Protocol.
-               </p>
+               <div className="flex flex-wrap gap-4 pt-4">
+                  {['All', 'Gold', 'Platinum', 'Master'].map((tier) => (
+                    <button
+                      key={tier}
+                      onClick={() => setFilterTier(tier as any)}
+                      className={`px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                        filterTier === tier 
+                          ? 'bg-gold text-navy' 
+                          : 'bg-text/5 text-text/40 hover:text-text border border-text/5'
+                      }`}
+                    >
+                      {tier} {tier !== 'All' ? 'Tier' : 'Sectors'}
+                    </button>
+                  ))}
+               </div>
             </div>
             <div className="flex bg-text/5 p-4 rounded-3xl border border-text/5 backdrop-blur-3xl group focus-within:border-gold/30 transition-all border-dashed">
                <input 
@@ -113,6 +127,7 @@ export default function MarketplaceView() {
            alt="Featured Collective" 
            className="w-full h-full object-cover grayscale brightness-50 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[2000ms]"
            referrerPolicy="no-referrer"
+           loading="lazy"
          />
          <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-transparent"></div>
          <div className="absolute bottom-16 left-12 right-12 space-y-8">
@@ -140,7 +155,12 @@ export default function MarketplaceView() {
             <div className="flex -space-x-4">
                {network.slice(0, 5).map((u, i) => (
                  <div key={i} className="w-10 h-10 rounded-full border-2 border-[var(--navy)] overflow-hidden bg-navy ring-1 ring-text/10">
-                   <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${u.displayName}`} alt="" className="w-full h-full object-cover" />
+                   <img 
+                     src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${u.displayName}`} 
+                     alt="" 
+                     className="w-full h-full object-cover" 
+                     loading="lazy"
+                   />
                  </div>
                ))}
                <div className="w-10 h-10 rounded-full border-2 border-[var(--navy)] bg-text/5 flex items-center justify-center text-[8px] font-black text-text/40 ring-1 ring-text/10 backdrop-blur-xl">
@@ -218,7 +238,13 @@ export default function MarketplaceView() {
                      <Store className="w-4 h-4 text-text/10 group-hover:text-gold/20 transition-colors" />
                   </div>
                   <div className="w-32 h-32 rounded-[2rem] overflow-hidden grayscale brightness-50 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-[1500ms] flex-shrink-0 shadow-2xl ring-1 ring-text/10">
-                     <img src={vendor.img} alt={vendor.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                     <img 
+                       src={vendor.img} 
+                       alt={vendor.name} 
+                       className="w-full h-full object-cover" 
+                       referrerPolicy="no-referrer" 
+                       loading="lazy"
+                     />
                   </div>
                   <div className="flex-grow space-y-4 text-center sm:text-left">
                      <div>

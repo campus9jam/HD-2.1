@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db, handleFirestoreError } from '../lib/firebase';
 import { Order, LogisticsEvent } from '../contexts/OrderContext';
+import { rewardLee } from './LeeEconomyService';
 
 export const fetchUserAcquisitions = async (userId: string): Promise<Order[]> => {
   try {
@@ -71,6 +72,16 @@ export const createAcquisition = async (orderData: Omit<Order, 'id' | 'timestamp
         }
       ]
     });
+
+    // Reward buyer for archival support
+    if (orderData.buyerId) {
+      const rewardAmount = Math.floor(orderData.totalValue / 100); // 1 LEE per 100 Naira
+      await rewardLee(orderData.buyerId, rewardAmount, 'lee_reward', { 
+        reason: 'Cultural Patronage', 
+        orderId: docRef.id 
+      });
+    }
+
     return docRef.id;
   } catch (error) {
     if (error instanceof Error && error.message.includes('{')) throw error;

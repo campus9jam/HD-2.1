@@ -1,15 +1,33 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useOrders } from '../contexts/OrderContext';
-import { Package, ChevronLeft, MapPin, Calendar, Hash, Truck, CheckCircle2, Clock, ChevronDown, PlayCircle } from 'lucide-react';
+import { 
+  Package, 
+  ChevronLeft, 
+  MapPin, 
+  Calendar, 
+  Hash, 
+  Truck, 
+  CheckCircle2, 
+  Clock, 
+  ChevronDown, 
+  PlayCircle,
+  ShieldCheck,
+  RefreshCw,
+  Loader2
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { updateLogisticsStatus } from '../services/LogisticsService';
+import { releaseEscrow } from '../services/WalletService';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function OrdersView() {
+  const { user } = useAuth();
   const { orders, refreshOrders } = useOrders();
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [isReleasing, setIsReleasing] = useState<string | null>(null);
 
   const simulateTransit = async (orderId: string) => {
      setIsUpdating(orderId);
@@ -27,8 +45,28 @@ export default function OrdersView() {
      } else {
         toast.error("Logistics synchronization failed.");
      }
-     setIsUpdating(orderId); // Wait, should be null or some other state handling
      setIsUpdating(null);
+  };
+
+  const handleReleaseFunds = async (order: any) => {
+    if (!user) return;
+    setIsReleasing(order.id);
+    try {
+      // Assuming order.auctionId and order.sellerId exist for auction wins
+      // For standard purchases, escrow might not be needed, but we simulate it
+      const sellerId = order.vendorId || order.sellerId || "V_ARCHIVE_01";
+      await releaseEscrow(sellerId, user.uid, order.totalValue, order.auctionId || order.id);
+      
+      toast.success("Sovereign Settlement Finalized", {
+        description: "Funds have been released from the vault to the artisan."
+      });
+      
+      await refreshOrders();
+    } catch (error: any) {
+      toast.error("Settlement error", { description: error.message });
+    } finally {
+      setIsReleasing(null);
+    }
   };
   return (
     <motion.div 
@@ -108,6 +146,27 @@ export default function OrdersView() {
                       ))}
                    </div>
                 </div>
+
+                {order.status !== 'finalized' && (
+                  <div className="p-6 bg-gold/5 border border-gold/10 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                       <div className="p-3 bg-gold/10 rounded-full">
+                          <ShieldCheck className="w-5 h-5 text-gold" />
+                       </div>
+                       <div>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-gold/60 mb-1">Escrow Security Active</p>
+                          <p className="text-[11px] text-text/60 italic">Release funds only after inspecting the artifact's high-fidelity physical state.</p>
+                       </div>
+                    </div>
+                    <button 
+                      onClick={() => handleReleaseFunds(order)}
+                      disabled={isReleasing === order.id}
+                      className="whitespace-nowrap px-8 py-4 bg-gold text-navy rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2 hover:shadow-[0_0_30px_rgba(var(--gold-rgb),0.3)] disabled:opacity-50 transition-all"
+                    >
+                       {isReleasing === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'RELEASE SETTLEMENT'}
+                    </button>
+                  </div>
+                )}
 
                 {/* Logistics Timeline Toggle */}
                 <div className="pt-8 border-t border-text/5">

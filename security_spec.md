@@ -1,24 +1,52 @@
-# Security Specification: House of Daraja Sovereignty Layer
+# Security Specification: House of Daraja
 
-## Data Invariants
-1. **Identity Immunity**: User status tiers (`Gold`, `Diamond`, etc) can ONLY be updated by the platform Admin node.
-2. **Provenance Integrity**: Acquisitions are immutable after creation.
-3. **Vendor Accreditation**: Only Admin can grant "Master" or "Platinum" statuses.
-4. **Acquisition Atomicity**: A user can only create an acquisition where `buyerId` matches their authenticated UID.
+## 1. Data Invariants
 
-## The "Dirty Dozen" (Attack Payloads)
-1. **Self-Promotion**: Authenticated user tries to update their own `statusTier` to `Diamond Elite`.
-2. **Shadow Artifact**: Non-admin user tries to create a `Product` in the archives.
-3. **Provenance Forgery**: Authenticated user tries to create an `Acquisition` with `buyerId` pointing to another user.
-4. **Stock Exhaustion**: Attackers trying to set negative `stock` or infinity values.
-5. **ID Poisoning**: Injecting 1MB strings into a document ID to cause resource exhaustion.
-6. **PII Leak**: Unauthorized user trying to read `email` fields in the `users` collection without ownership.
-7. **Terminal State Reset**: Overwriting a `secured` acquisition back to `processing`.
-8. **Vendor Spoofing**: User tries to update a `Vendor` profile they do not own.
-9. **Spam Signals**: Flood the `feed` with 1,000 requests per minute from one UID.
-10. **Shadow Key Injection**: Adding unknown fields (e.g., `isAdmin: true`) to a user profile during creation.
-11. **Time Travel**: Client providing a manual `timestamp` in the future for an acquisition.
-12. **Blanket Query Scraping**: Attempting a `list` query on `acquisitions` without a `where buyerId == currentAuth` clause.
+1. **User Invariant**: A user's role can only be 'citizen', 'contributor', or 'admin'. Only an admin can upgrade a user's role.
+2. **Product Invariant**: Products must have a vendorId, title, price, and status. Only a vendor or admin can create/modify products.
+3. **Order Invariant**: Orders must have a customerId, vendorId, amount, and status. A customer can only create 'pending' orders. Transition to 'paid' must be handled by a secure system handler (admin).
+4. **Governance Invariant**: A citizen can only vote once per proposal. Vote weight is determined by citizenship status.
+5. **PII Invariant**: User PII (email, address) must be protected and only accessible by the owner or admin.
 
-## Test Matrix (Failing Expectations)
-All payloads above MUST return `PERMISSION_DENIED` by the kernel.
+## 2. The "Dirty Dozen" Payloads
+
+1. **Identity Spoofing**: Attempt to create a user profile with `role: 'admin'`.
+   - Result: `PERMISSION_DENIED` (Guard: `incoming().role == 'citizen'`)
+2. **Resource Poisoning**: Attempt to create a product with a 1MB string as `productId`.
+   - Result: `PERMISSION_DENIED` (Guard: `isValidId(productId)`)
+3. **Escalation Attack**: Authenticated user attempts to list the `/users` collection.
+   - Result: `PERMISSION_DENIED` (Guard: `allow list: if isAdmin()`)
+4. **Price Manipulation**: Attempt to update a product price to `0.01` without being the vendor.
+   - Result: `PERMISSION_DENIED` (Guard: `isOwner(existing().vendorId)`)
+5. **State Skipping**: Attempt to create an order with `status: 'completed'`.
+   - Result: `PERMISSION_DENIED` (Guard: `incoming().status == 'pending'`)
+6. **Double Voting**: Attempt to create two votes for the same `proposalId` and `userId`.
+   - Result: `PERMISSION_DENIED` (Guard: `voteId == incoming().proposalId + '_' + request.auth.uid`)
+7. **Shadow Field Injection**: Attempt to update a user profile with an extra `isVerified: true` field.
+   - Result: `PERMISSION_DENIED` (Guard: `affectedKeys().hasOnly([...])`)
+8. **PII Breach**: Authenticated user attempts to `get` another user's profile which contains an email.
+   - Result: `PERMISSION_DENIED` (Guard: `allow read: if isSignedIn() && (isOwner(userId) || isAdmin())` -- Note: current rules allow `get: if isSignedIn()`, needs review for PII isolation)
+9. **Unverified Write**: User with `email_verified: false` attempts to create a high-status artifact.
+   - Result: `PERMISSION_DENIED` (Guard: `isVerified()`)
+10. **Historical Tampering**: Attempt to update a feed item's `timestamp`.
+    - Result: `PERMISSION_DENIED` (Guard: `allow update: if isAdmin()`)
+11. **Atelier Hijack**: User A attempts to create an `AtelierClient` with User B's email.
+    - Result: `PERMISSION_DENIED` (Guard: `incoming().email == request.auth.token.email`)
+12. **Proposal Sabotage**: Non-admin attempts to `delete` a governance proposal.
+    - Result: `PERMISSION_DENIED` (Guard: `allow delete: if isAdmin()`)
+
+## 3. Vulnerability Analysis & Delta Report
+
+| Collection | Vulnerability Found | Mitigation |
+|------------|---------------------|------------|
+| `/users` | PII Leak: `get` is allowed for any signed-in user. | Restrict `get` to `isOwner(userId) \|\| isAdmin()`. |
+| `/atlier_orders` | Broad list: `allow list: if isSignedIn()` | Change to relational check: `resource.data.clientEmail == auth.token.email`. |
+| `/products` | Vendor bypass: `allow create: if isVerified() && (request.auth.token.role == 'vendor' || isAdmin())` | Ensure vendor role is read from a secure admin-only document, not client token. |
+
+## 4. Conflict Report: Conflict between current rules and app requirements
+
+| Requirement | Rule | Conflict | Resolution |
+|-------------|------|----------|------------|
+| Marketplace browsing | `allow read: if true` | No conflict. | Publicly viewable. |
+| User Profile Setup | `allow create: if isOwner(userId)` | No conflict. | Required for onboarding. |
+| Chat History | `allow list: if resource.data.userId == request.auth.uid` | No conflict. | Private history. |

@@ -5,7 +5,7 @@ import { useCart } from '../contexts/CartContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useAuth } from '../contexts/AuthContext';
-import { ChevronLeft, Heart, ChevronRight, Info, Globe, Scissors, Check, Sparkles, MessageCircle, Clock, ShieldCheck, Share2, Maximize2, Lock, ArrowRight, X, Play, Loader2, ShoppingBag } from 'lucide-react';
+import { ChevronLeft, Heart, ChevronRight, Info, Globe, Scissors, Check, Sparkles, MessageCircle, Clock, ShieldCheck, Share2, Maximize2, Lock, ArrowRight, X, Play, Loader2, ShoppingBag, Gavel } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { toast } from 'sonner';
@@ -81,8 +81,8 @@ export default function ProductDetailView() {
   const mediaItems = useMemo(() => {
     if (!product) return [];
     const regularMedia = product.media.map(url => ({ url, type: 'image' }));
-    const driveMedia = product.driveMedia || [];
-    return [...regularMedia, ...driveMedia];
+    const vaultMedia = product.vaultMedia || [];
+    return [...regularMedia, ...vaultMedia];
   }, [product]);
 
   const nextMedia = () => {
@@ -197,15 +197,41 @@ export default function ProductDetailView() {
     >
       {/* Utility Header */}
       <header className="fixed top-0 inset-x-0 p-8 flex justify-between items-center z-50 pointer-events-none">
-        <Link to="/" className="p-4 bg-surface/40 backdrop-blur-xl rounded-full border border-text/10 text-text pointer-events-auto hover:bg-gold transition-colors group">
-          <ChevronLeft className="w-5 h-5 group-hover:text-navy transition-colors" />
-        </Link>
-        <button 
-           onClick={() => toggleWishlist(product as any)}
-           className={`p-4 backdrop-blur-xl rounded-full border transition-all pointer-events-auto group ${isSaved ? 'bg-red-500 border-red-500 text-text' : 'bg-surface/40 border-text/10 text-text hover:text-red-500'}`}
-        >
-           <Heart className={`w-5 h-5 transition-all ${isSaved ? 'fill-current' : 'group-hover:fill-current'}`} />
-        </button>
+        <div className="flex items-center gap-6 pointer-events-auto">
+          <Link to="/" className="p-4 bg-surface/40 backdrop-blur-xl rounded-full border border-text/10 text-text hover:bg-gold transition-colors group">
+            <ChevronLeft className="w-5 h-5 group-hover:text-navy transition-colors" />
+          </Link>
+          <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-surface/40 backdrop-blur-xl rounded-full border border-text/10">
+             <Link to="/shop" className="text-[9px] font-black uppercase text-text/40 hover:text-gold tracking-widest transition-colors">Archive</Link>
+             <ChevronRight className="w-3 h-3 text-text/10" />
+             <span className="text-[9px] font-black uppercase text-gold tracking-widest">{product.category}</span>
+          </div>
+        </div>
+        <div className="flex gap-4 pointer-events-auto">
+          <button 
+             onClick={() => {
+               if (navigator.share) {
+                 navigator.share({
+                   title: product?.title,
+                   text: product?.description,
+                   url: window.location.href
+                 }).catch(() => {});
+               } else {
+                 navigator.clipboard.writeText(window.location.href);
+                 toast.success('Sovereign Link Copied');
+               }
+             }}
+             className="p-4 bg-surface/40 backdrop-blur-xl rounded-full border border-text/10 text-text hover:bg-gold transition-colors group"
+          >
+             <Share2 className="w-5 h-5 group-hover:text-navy transition-colors" />
+          </button>
+          <button 
+             onClick={() => toggleWishlist(product as any)}
+             className={`p-4 backdrop-blur-xl rounded-full border transition-all pointer-events-auto group ${isSaved ? 'bg-red-500 border-red-500 text-text' : 'bg-surface/40 border-text/10 text-text hover:text-red-500'}`}
+          >
+             <Heart className={`w-5 h-5 transition-all ${isSaved ? 'fill-current' : 'group-hover:fill-current'}`} />
+          </button>
+        </div>
       </header>
 
       {/* Product Image Focus - Carousel */}
@@ -269,7 +295,12 @@ export default function ProductDetailView() {
                {negotiatedPrice && (
                   <span className="text-[8px] font-black uppercase text-green-500 bg-green-500/10 px-3 py-1 rounded-full animate-pulse border border-green-500/20">Leema Verified</span>
                )}
-               <span className="text-[10px] uppercase font-black text-text/20 tracking-[0.2em]">Excl. International Logistics</span>
+               <div className="flex items-center gap-2 group cursor-help">
+                  <Sparkles className="w-3 h-3 text-gold animate-pulse" />
+                  <span className="text-[9px] uppercase font-black text-gold/40 border border-gold/10 px-3 py-1 rounded-full group-hover:bg-gold/5 transition-all">
+                     Pay up to 20% in LEE
+                  </span>
+               </div>
             </div>
             <p className="text-text/60 text-sm font-light leading-relaxed italic max-w-md">
                {product.description}
@@ -297,26 +328,36 @@ export default function ProductDetailView() {
 
          {/* Action Buttons */}
          <div className="fixed bottom-12 inset-x-8 z-50 flex flex-col gap-4">
-             <div className="flex gap-4">
-                <button 
-                  onClick={() => {
-                    const event = new CustomEvent('leema:trigger', { 
-                      detail: { text: `I would like to negotiate the price for the ${product.title}. It is currently ₦${product.price.toLocaleString()}. What is the absolute best price from the Kano archive?` } 
-                    });
-                    window.dispatchEvent(event);
-                  }}
-                  className="luxury-button-outline flex-1 !rounded-2xl !py-8 text-[10px] font-black tracking-[0.3em]"
+             {product.status === 'drop' ? (
+                <Link 
+                  to="/drops"
+                  className="luxury-button w-full !rounded-2xl !py-8 text-xs font-black tracking-[0.4em] shadow-[0_20px_50px_rgba(var(--gold-rgb),0.5)] bg-gold text-navy flex items-center justify-center gap-3"
                 >
-                  NEGOTIATE
-                </button>
-                <button 
-                  onClick={initiatePurchase}
-                  disabled={isProcessing}
-                  className="luxury-button flex-[2] !rounded-2xl !py-8 text-xs font-black tracking-[0.4em] shadow-[0_20px_50px_rgba(var(--gold-rgb),0.4)] bg-gold text-navy disabled:opacity-50"
-                >
-                  {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : 'ACQUIRE ARTIFACT'}
-                </button>
-             </div>
+                  <Gavel className="w-5 h-5" />
+                  PARTICIPATE IN AUCTION
+                </Link>
+             ) : (
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => {
+                      const event = new CustomEvent('leema:trigger', { 
+                        detail: { text: `I would like to negotiate the price for the ${product.title}. It is currently ₦${product.price.toLocaleString()}. What is the absolute best price from the Kano archive?` } 
+                      });
+                      window.dispatchEvent(event);
+                    }}
+                    className="luxury-button-outline flex-1 !rounded-2xl !py-8 text-[10px] font-black tracking-[0.3em]"
+                  >
+                    NEGOTIATE
+                  </button>
+                  <button 
+                    onClick={initiatePurchase}
+                    disabled={isProcessing}
+                    className="luxury-button flex-[2] !rounded-2xl !py-8 text-xs font-black tracking-[0.4em] shadow-[0_20px_50px_rgba(var(--gold-rgb),0.4)] bg-gold text-navy disabled:opacity-50"
+                  >
+                    {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : 'ACQUIRE ARTIFACT'}
+                  </button>
+                </div>
+             )}
              <p className="text-[9px] text-center text-text/20 uppercase font-bold tracking-tighter">
                Sovereign_Handshake Protocol Active
              </p>

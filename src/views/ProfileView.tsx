@@ -24,7 +24,8 @@ import {
   Plus,
   Database,
   RefreshCw,
-  HardDrive
+  HardDrive,
+  Copy
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -135,22 +136,38 @@ export default function ProfileView() {
          </div>
          <div className="space-y-4">
             <h1 className="text-4xl font-serif text-text italic">{profile?.displayName || user?.displayName?.split(' ')[0] || 'Noble'} .A</h1>
-            <div className="inline-block px-6 py-1.5 bg-gradient-to-r from-gold/30 via-gold/50 to-gold/30 rounded-full border border-gold/20 backdrop-blur-md">
-               <span className="text-[9px] uppercase font-black text-text tracking-[0.3em]">{profile?.statusTier || 'GOLD'} MEMBER</span>
+            <div className="flex flex-col items-center gap-3">
+               <div className="inline-block px-6 py-1.5 bg-gradient-to-r from-gold/30 via-gold/50 to-gold/30 rounded-full border border-gold/20 backdrop-blur-md">
+                  <span className="text-[9px] uppercase font-black text-text tracking-[0.3em]">{profile?.tier || 'Explorer'}</span>
+               </div>
+               <button 
+                 onClick={() => {
+                   navigator.clipboard.writeText(user?.uid || '');
+                   toast.success('Identity Token Copied', { description: 'Your sovereign UID is now in the bridge buffer.' });
+                 }}
+                 className="flex items-center gap-2 px-3 py-1 bg-text/5 rounded-full border border-text/5 text-text/30 hover:text-gold transition-colors"
+               >
+                  <span className="text-[7px] font-mono uppercase tracking-widest">{user?.uid.slice(0, 8)}...{user?.uid.slice(-4)}</span>
+                  <Copy className="w-2.5 h-2.5" />
+               </button>
             </div>
          </div>
       </section>
 
       {/* Stats Board */}
       <section className="px-8 mt-12">
-         <div className="flex border-t border-b border-text/5 py-8">
-            <div className="flex-1 text-center border-r border-text/5">
-               <p className="text-xl font-serif text-text">{profile?.xp || 0}</p>
-               <p className="text-[8px] uppercase font-black text-text/20 tracking-wider">Points</p>
+         <div className="grid grid-cols-2 lg:grid-cols-4 border-t border-b border-text/5 py-8 gap-y-8">
+            <div className="flex-1 text-center lg:border-r border-text/5">
+               <p className="text-xl font-serif text-text">{(profile?.leeBalance || 0).toLocaleString()}</p>
+               <p className="text-[8px] uppercase font-black text-text/20 tracking-wider">LEE Balance</p>
             </div>
-            <div className="flex-1 text-center border-r border-text/5">
-               <p className="text-xl font-serif text-text">{orders.length}</p>
-               <p className="text-[8px] uppercase font-black text-text/20 tracking-wider">Orders</p>
+            <div className="flex-1 text-center lg:border-r border-text/5">
+               <p className="text-xl font-serif text-text">{(profile?.stakedBalance || 0).toLocaleString()}</p>
+               <p className="text-[8px] uppercase font-black text-text/20 tracking-wider">Staked LEE</p>
+            </div>
+            <div className="flex-1 text-center lg:border-r border-text/5">
+               <p className="text-xl font-serif text-text">{profile?.reputationScore || 0}</p>
+               <p className="text-[8px] uppercase font-black text-text/20 tracking-wider">Reputation</p>
             </div>
             <div className="flex-1 text-center font-serif text-text italic">
                <p className="text-xl">{currentAchievements.length}</p>
@@ -190,9 +207,11 @@ export default function ProfileView() {
       {/* Categorized Actions */}
       <section className="px-8 mt-12 space-y-6">
          {[
+            { label: 'Sovereign Vault', icon: Crown, highlight: true, link: '/wallet' },
+            { label: 'Artisan Studio', icon: Database, link: '/seller-studio' },
             { label: 'My Purchases', icon: Package, count: orders.length, link: '/orders' },
             { label: 'Bespoke Protocols', icon: Scissors, count: 0, link: '/atelier' },
-            { label: 'My Rewards', icon: Gift, count: profile?.xp ? 1 : 0, highlight: true, link: '/rewards' },
+            { label: 'My Rewards', icon: Gift, count: profile?.xp ? 1 : 0, link: '/rewards' },
             { label: 'Saved Items', icon: Heart, count: wishlist.length, link: '/saved' }
          ].map((item, i) => (
             <Link 

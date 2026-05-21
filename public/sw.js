@@ -23,8 +23,11 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
-        // Cache successful responses for our own origin
-        if (networkResponse.ok && event.request.url.startsWith(self.location.origin)) {
+        // Cache successful responses for our origin and common image domains
+        const url = event.request.url;
+        const isImageHost = url.includes('imgur.com') || url.includes('picsum.photos') || url.includes('unsplash.com');
+        
+        if ((networkResponse.ok || networkResponse.status === 0) && (url.startsWith(self.location.origin) || isImageHost)) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -40,3 +43,23 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'PRECACHE_IMAGES') {
+    const urls = event.data.urls || [];
+    caches.open(CACHE_NAME).then((cache) => {
+      urls.forEach((url) => {
+        cache.match(url).then(response => {
+          if (!response) {
+            fetch(url, { mode: 'no-cors' }).then(networkResponse => {
+              if (networkResponse.ok || networkResponse.status === 0) {
+                cache.put(url, networkResponse.clone());
+              }
+            }).catch(err => console.warn('Failed to precache:', url, err));
+          }
+        });
+      });
+    });
+  }
+});
+

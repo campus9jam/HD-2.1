@@ -1,12 +1,16 @@
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useCart } from '../contexts/CartContext';
-import { ShieldCheck, Lock, CreditCard, ChevronRight, Globe, CheckCircle } from 'lucide-react';
-import { useState } from 'react';
+import { ShieldCheck, Lock, CreditCard, ChevronRight, Globe, CheckCircle, X, Sparkles, Zap } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useOrders } from '../contexts/OrderContext';
 import { unlockAchievement } from '../lib/achievementUtils';
 import { toast } from 'sonner';
+import { VirtualAccountCard } from '../components/VirtualAccountCard';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { calculateMaxLeeUsage, LEE_REDEMPTION_RATIO, burnLee } from '../services/LeeEconomyService';
 
 export default function CheckoutView() {
   const { cart, totalPrice, clearCart } = useCart();
@@ -15,6 +19,10 @@ export default function CheckoutView() {
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [checkoutData, setCheckoutData] = useState<any>(null);
+  const [showVirtualAccount, setShowVirtualAccount] = useState(false);
+  const [useLee, setUseLee] = useState(false);
+  const [leeAmount, setLeeAmount] = useState(0);
   const [formData, setFormData] = useState({
     cardNum: '',
     expiry: '',
@@ -22,48 +30,60 @@ export default function CheckoutView() {
     phone: ''
   });
 
+  const { maxLee, maxFiatReduction } = useMemo(() => 
+    calculateMaxLeeUsage(totalPrice, profile?.tier),
+    [totalPrice, profile?.tier]
+  );
+
+  const finalPrice = useLee ? totalPrice - (leeAmount / LEE_REDEMPTION_RATIO) : totalPrice;
+
   const handlePayment = async () => {
     setIsProcessing(true);
-    
-    // Simulate real network delay 
-    await new Promise(resolve => setTimeout(resolve, 2500));
-
-    // Basic Validation simulation
-    if (paymentMethod === 'card') {
-      if (formData.cardNum.length < 16) {
-        toast.error("Auth Fail: Vault ID (Card) format invalid.");
-        setIsProcessing(false);
-        return;
-      }
-    } else {
-      if (formData.phone.length < 10) {
-        toast.error(`Auth Fail: ${paymentMethod.toUpperCase()} identity node missing.`);
-        setIsProcessing(false);
-        return;
-      }
-    }
-
     try {
-      // Record Order in Provance Ledger (Firestore)
-      await addOrder({
-        items: cart,
-        totalValue: totalPrice,
-        buyerId: profile?.uid
+      // Burn LEE if applied
+      if (useLee && leeAmount > 0) {
+        await burnLee(profile!.uid, leeAmount, 'lee_burn', 'checkout_redemption');
+      }
+
+      // Module 2: Secure Payment Orchestration
+      const response = await fetch('/api/payments/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: 'cart_nexus',
+          userId: profile?.uid,
+          amount: finalPrice
+        })
       });
 
-      // Mock successful payment
-      setStep(3);
-      
-      // Award Patron achievement
-      if (profile) {
-        unlockAchievement(profile.uid, 'PATRON', profile).catch(console.error);
-      }
+      const result = await response.json();
+      if (result.status === 'success') {
+        const orderRef = doc(db, 'orders', result.data.reference);
+        
+        await setDoc(orderRef, {
+          items: cart.map(item => ({
+            id: item.id,
+            title: item.title,
+            price: item.price,
+            img: item.media?.[0] || ''
+          })),
+          totalValue: finalPrice,
+          leeUsed: useLee ? leeAmount : 0,
+          status: 'pending',
+          customerId: profile?.uid,
+          reference: result.data.reference,
+          timestamp: serverTimestamp()
+        });
 
-      setTimeout(() => {
-        clearCart();
-      }, 2000);
-    } catch (err) {
-      toast.error("Settlement Node Error: Consensus failed during transaction.");
+        setCheckoutData(result.data);
+        setShowVirtualAccount(true);
+        toast.success('Sovereign Link Established');
+      } else {
+        throw new Error(result.message || 'Payment Node Error');
+      }
+    } catch (error: any) {
+      console.error("Payment Protocol Failure:", error);
+      toast.error('Payment Node Error', { description: error.message });
     } finally {
       setIsProcessing(false);
     }
@@ -78,7 +98,7 @@ export default function CheckoutView() {
       <header className="flex flex-col md:flex-row justify-between items-end gap-10 pb-12 border-b border-text/5">
         <div className="space-y-4">
            <span className="text-[10px] uppercase font-black text-gold tracking-[0.4em]">Secure_Settlement.v4</span>
-           <h1 className="text-4xl md:text-6xl font-serif text-text italic">Finalize <span className="text-gold">Acquisition.</span></h1>
+           <h1 className="text-4xl md:text-6xl font-serif text-text italic">Finalize <span className="text-gold">Acquisition Economy.</span></h1>
         </div>
         <div className="flex gap-4">
            {[1, 2, 3].map(i => (
@@ -116,6 +136,54 @@ export default function CheckoutView() {
            <div className="space-y-8">
               <div className="luxury-card p-12 bg-surface/30 border-text/5 space-y-10">
                  <h4 className="text-xs font-black uppercase text-text/20 tracking-widest">Acquisition Summary</h4>
+
+                 {/* LEE Redemption UI */}
+                 <div className="p-6 bg-gold/5 rounded-3xl border border-gold/10 space-y-4">
+                    <div className="flex items-center justify-between">
+                       <div className="flex items-center gap-3">
+                          <Sparkles className="w-4 h-4 text-gold" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-gold">LEE Economy Support</span>
+                       </div>
+                       <button 
+                         onClick={() => {
+                           setUseLee(!useLee);
+                           if (!useLee) setLeeAmount(Math.min(profile?.leeBalance || 0, maxLee));
+                         }}
+                         className={`w-12 h-6 rounded-full transition-all relative ${useLee ? 'bg-gold' : 'bg-text/10'}`}
+                       >
+                          <div className={`absolute top-1 w-4 h-4 rounded-full bg-navy transition-all ${useLee ? 'right-1' : 'left-1'}`} />
+                       </button>
+                    </div>
+                    
+                    <AnimatePresence>
+                       {useLee && (
+                          <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="space-y-4 overflow-hidden pt-2"
+                          >
+                             <div className="flex items-center justify-between text-[10px] uppercase font-black tracking-widest opacity-40">
+                                <span>Redemption Amount</span>
+                                <span>Max: {maxLee.toLocaleString()} LEE</span>
+                             </div>
+                             <input 
+                               type="range"
+                               min="0"
+                               max={Math.min(profile?.leeBalance || 0, maxLee)}
+                               value={leeAmount}
+                               onChange={(e) => setLeeAmount(parseInt(e.target.value))}
+                               className="w-full accent-gold h-1 bg-text/5 rounded-full appearance-none cursor-pointer"
+                             />
+                             <div className="flex justify-between items-center text-gold">
+                                <span className="text-xs font-serif italic">Subsidized Value</span>
+                                <span className="text-xl font-serif italic">-₦{(leeAmount / LEE_REDEMPTION_RATIO).toLocaleString()}</span>
+                             </div>
+                          </motion.div>
+                       )}
+                    </AnimatePresence>
+                 </div>
+
                  <div className="space-y-8 border-b border-text/5 pb-10">
                     <div className="flex justify-between items-center">
                        <span className="text-base font-serif italic text-text/60">Subtotal Allocation</span>
@@ -123,12 +191,20 @@ export default function CheckoutView() {
                     </div>
                     <div className="flex justify-between items-center">
                        <span className="text-base font-serif italic text-text/60">Secure Logistics</span>
-                       <span className="text-gold font-serif text-lg italic">Included (Elite)</span>
+                       <div className="text-right">
+                          <span className="text-gold font-serif text-lg italic">
+                             {['Elite', 'Icon', 'Sovereign', 'Diamond Elite', 'Platinum'].includes(profile?.tier || '') ? 'Included (Elite)' : '₦5,000'}
+                          </span>
+                          <div className="flex items-center gap-1 mt-1 justify-end">
+                             <Sparkles className="w-3 h-3 text-gold/40" />
+                             <span className="text-[7px] font-black uppercase tracking-widest text-text/30">AI_Optimized_Route</span>
+                          </div>
+                       </div>
                     </div>
                  </div>
                  <div className="flex justify-between items-end">
                     <span className="text-[10px] uppercase font-black text-text/20">Total Value</span>
-                    <span className="text-5xl font-serif text-text italic drop-shadow-[0_10px_30px_rgba(var(--gold-rgb),0.2)]">₦{totalPrice.toLocaleString()}</span>
+                    <span className="text-5xl font-serif text-text italic drop-shadow-[0_10px_30px_rgba(var(--gold-rgb),0.2)]">₦{finalPrice.toLocaleString()}</span>
                  </div>
               </div>
 
@@ -271,6 +347,43 @@ export default function CheckoutView() {
             </div>
         </section>
       )}
+
+      {/* Virtual Account Overlay */}
+      <AnimatePresence>
+        {showVirtualAccount && checkoutData && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-surface/95 backdrop-blur-3xl flex items-center justify-center p-8"
+          >
+            <div className="w-full max-w-lg space-y-10">
+              <div className="flex justify-between items-center">
+                <button onClick={() => setShowVirtualAccount(false)} className="p-4 bg-text/5 rounded-full hover:bg-gold transition-all">
+                  <X className="w-6 h-6" />
+                </button>
+                <div className="text-right">
+                   <p className="text-[10px] uppercase font-black text-gold tracking-widest">Sovereign_Handshake</p>
+                   <p className="text-[8px] uppercase font-black text-text/20">Ref: {checkoutData.reference}</p>
+                </div>
+              </div>
+              
+              <VirtualAccountCard 
+                orderId={checkoutData.reference}
+                amount={checkoutData.amount}
+                accountNumber={checkoutData.virtualAccount.accountNumber}
+                bankName={checkoutData.virtualAccount.bank}
+                expiryTime={checkoutData.virtualAccount.expiry}
+                onPaymentSuccess={() => {
+                  setShowVirtualAccount(false);
+                  setStep(3);
+                  clearCart();
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

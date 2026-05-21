@@ -113,6 +113,40 @@ service cloud.firestore {
             && data.timestamp == request.time;
     }
 
+    function isValidAuctionDrop(data) {
+        return data.keys().hasAll(['title', 'productId', 'startTime', 'endTime', 'status', 'startingBid', 'type'])
+            && data.title is string && data.title.size() <= 200
+            && data.productId is string && data.productId.size() <= 128
+            && data.startingBid is number && data.startingBid >= 0
+            && data.currentBid is number && data.currentBid >= data.startingBid
+            && data.type in ['timed', 'flash', 'live']
+            && data.status in ['upcoming', 'active', 'ended', 'disputed']
+            && data.bids is list && data.bids.size() <= 1000
+            && (data.winnerId == null || (data.winnerId is string && data.winnerId.size() <= 128));
+    }
+
+    function isValidWallet(data) {
+        return data.userId is string && data.userId.size() <= 128
+            && data.balance is number && data.balance >= 0
+            && data.escrowBalance is number && data.escrowBalance >= 0
+            && data.currency is string && data.currency.size() <= 10;
+    }
+
+    function isValidWalletTransaction(data) {
+        return data.userId is string && data.userId.size() <= 128
+            && data.amount is number && data.amount > 0
+            && data.type in ['deposit', 'withdrawal', 'payment', 'escrow_hold', 'escrow_release', 'refund']
+            && data.status in ['pending', 'completed', 'failed']
+            && data.timestamp == request.time;
+    }
+
+    function isValidAuctionComment(data) {
+        return data.auctionId is string && data.auctionId.size() <= 128
+            && data.userId is string && data.userId == request.auth.uid
+            && data.message is string && data.message.size() >= 1 && data.message.size() <= 500
+            && data.timestamp == request.time;
+    }
+
     function isValidFeedItem(data) {
         return data.userId is string && data.userId == request.auth.uid
             && data.action is string && data.action.size() <= 200
@@ -149,14 +183,27 @@ service cloud.firestore {
     // MODULE 1: IDENTITY & ACCESS (ZERO-TRUST)
     // ==========================================
     match /users/{userId} {
-      allow get: if isSignedIn();
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow list: if isAdmin();
       allow create: if isOwner(userId) && isValidUserProfile(incoming())
                     && incoming().role == 'citizen'; // Role injection guard
       allow update: if (isOwner(userId) && isVerified() 
-                      && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'bio', 'savedAddresses', 'communicationChannels', 'updatedAt'])
+                      && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'bio', 'savedAddresses', 'communicationChannels', 'updatedAt', 'identityMarkers', 'username'])
                       && incoming().updatedAt == request.time)
                     || isAdmin();
+    }
+
+    match /wallets/{walletId} {
+      allow get: if isSignedIn() && (isOwner(existing().userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isAdmin() || (isOwner(walletId) && isValidWallet(incoming()) && incoming().balance == 0);
+      allow update: if isAdmin(); // Wallet balances only updated via server/admin
+    }
+
+    match /transactions/{transactionId} {
+      allow get: if isSignedIn() && (isOwner(existing().userId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update, delete: if isAdmin(); // Transactions are system-generated
     }
 
     match /reward_activations/{activationId} {
@@ -223,6 +270,13 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /acquisitions/{acquisitionId} {
+      allow get: if isSignedIn() && (isOwner(existing().buyerId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.buyerId == request.auth.uid || isAdmin());
+      allow create: if isVerified() && isValidAcquisition(incoming()) && isValidId(acquisitionId);
+      allow update, delete: if isAdmin();
+    }
+
     match /community_videos/{videoId} {
       allow get, list: if resource.data.status == 'published' || isContributor();
       allow create: if isContributor() && isVerified() && isValidCommunityVideo(incoming())
@@ -263,7 +317,7 @@ service cloud.firestore {
 
     match /atelier_orders/{orderId} {
       allow get: if isSignedIn() && (exists(/databases/$(database)/documents/atelier_clients/$(existing().clientUsername)) && get(/databases/$(database)/documents/atelier_clients/$(existing().clientUsername)).data.email == request.auth.token.email || isAdmin());
-      allow list: if isAdmin() || (isSignedIn()); 
+      allow list: if isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/atelier_clients/$(resource.data.clientUsername)) && get(/databases/$(database)/documents/atelier_clients/$(resource.data.clientUsername)).data.email == request.auth.token.email); 
       
       allow create: if (isSignedIn() && isValidAtelierOrder(incoming())) || isAdmin();
       allow update: if isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/atelier_clients/$(existing().clientUsername)) && get(/databases/$(database)/documents/atelier_clients/$(existing().clientUsername)).data.email == request.auth.token.email && incoming().diff(existing()).affectedKeys().hasOnly(['orderNotes']));
@@ -288,6 +342,28 @@ service cloud.firestore {
                     && isValidId(voteId)
                     && voteId == incoming().proposalId + '_' + request.auth.uid;
       allow update, delete: if false;
+    }
+
+    match /auctions/{auctionId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        isSignedIn() && isVerified() &&
+        existing().status == 'active' &&
+        incoming().status == 'active' &&
+        incoming().currentBid > existing().currentBid &&
+        incoming().bidCount == existing().bidCount + 1 &&
+        incoming().bids.size() == existing().bids.size() + 1 &&
+        incoming().bids.hasAll(existing().bids) &&
+        isValidAuctionDrop(incoming())
+      );
+    }
+
+    match /auction_comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isVerified() && isValidAuctionComment(incoming()) && isValidId(commentId);
+      allow update: if isOwner(existing().userId) && incoming().diff(existing()).affectedKeys().hasOnly(['reactions']);
+      allow delete: if isAdmin() || isOwner(existing().userId);
     }
 
     match /connection_handshakes/{handshakeId} {
