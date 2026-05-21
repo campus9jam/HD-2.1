@@ -30,7 +30,7 @@ export const db = initializeFirestore(app, {
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && !window.location.hostname.includes('ais-dev')) {
   try {
     initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider('6LdfIqEqAAAAAByZ2fL8dF8Fj8dF8Fj8dF8Fj8'),
+      provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'default_key'),
       isTokenAutoRefreshEnabled: true
     });
   } catch (e) {
