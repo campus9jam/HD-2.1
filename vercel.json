@@ -1,7 +1,13 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.ts" },
+    { "source": "/api/youtube/(.*)", "destination": "/api/youtube/$1.ts" },
+    { "source": "/api/heritage/(.*)", "destination": "/api/heritage/$1.ts" },
+    { "source": "/api/ai/(.*)", "destination": "/api/ai/$1.ts" },
+    { "source": "/api/neural/(.*)", "destination": "/api/neural/$1.ts" },
+    { "source": "/api/media/(.*)", "destination": "/api/media/$1.ts" },
+    { "source": "/api/translate", "destination": "/api/translate/index.ts" },
+    { "source": "/api/payments/(.*)", "destination": "/api/payments/index.ts" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
