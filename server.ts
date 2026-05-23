@@ -18,6 +18,24 @@ export async function createServer() {
 
   app.use(express.json());
 
+  const isVercel = Boolean(process.env.VERCEL);
+  const forceViteDev = process.env.FORCE_VITE_DEV === "1";
+  const isProd = process.env.NODE_ENV === "production" && !forceViteDev;
+
+  const isAssetLikeRequest = (requestPath: string) => {
+    if (requestPath.startsWith('/@vite/') || requestPath.startsWith('/@fs/') || requestPath.startsWith('/src/')) {
+      return true;
+    }
+
+    const ext = path.extname(requestPath);
+    return Boolean(ext) && ext !== '.html';
+  };
+
+  const isHtmlNavigationRequest = (req: express.Request) => {
+    const accept = req.headers.accept || '';
+    return req.method === 'GET' && typeof accept === 'string' && accept.includes('text/html');
+  };
+
   // MODULE 5: SOVEREIGN MEDIA (YOUTUBE RSS BRIDGE)
   app.get("/api/youtube/rss", async (req, res) => {
     try {
@@ -307,25 +325,33 @@ export async function createServer() {
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+  if (!isProd && !isVercel) {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else if (!process.env.VERCEL) {
-    // Only serve static files if NOT on Vercel 
+  } else if (!isVercel) {
+    // Only serve static files if NOT on Vercel
     // (Vercel serves them directly via the output directory and rewrites)
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith('/api/') || isAssetLikeRequest(req.path)) {
+        return next();
+      }
+
+      if (!isHtmlNavigationRequest(req)) {
+        return res.status(404).end();
+      }
+
+      return res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
   // Only listen if explicitly told to or if not on Vercel
-  if (process.env.AI_STUDIO || !process.env.VERCEL) {
+  if (process.env.AI_STUDIO || !isVercel) {
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`[Sovereign Core] Online at http://localhost:${PORT}`);
       setupBackgroundOrchestrator();
