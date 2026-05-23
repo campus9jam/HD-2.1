@@ -1,9 +1,24 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, initializeFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { getAnalytics, isSupported } from 'firebase/analytics';
-import firebaseConfig from '../../firebase-applet-config.json';
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
+};
+
+const firestoreDatabaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID;
+
+if (!firebaseConfig.projectId) {
+  console.warn('Firebase project configuration is missing. Set VITE_FIREBASE_* variables in .env for full functionality.');
+}
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
@@ -14,16 +29,20 @@ if (typeof window !== 'undefined') {
   isSupported().then(yes => {
     if (yes) {
       analytics = getAnalytics(app);
-      console.log("House of Daraja: Analytics node active.");
+      console.log('House of Daraja: Analytics node active.');
     }
   });
 }
 
 // Connectivity Fix for sandboxed environments: Experimental Long Polling
 // We use a combination of settings that are known to work in restricted preview environments.
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-}, firebaseConfig.firestoreDatabaseId);
+export const db = firestoreDatabaseId
+  ? initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+    }, firestoreDatabaseId)
+  : initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+    });
 
 // Module 1: Firebase App Check (Cryptographic Attestation)
 // Disabled by default for development/sandbox stability unless specifically required
@@ -34,11 +53,11 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && !w
       isTokenAutoRefreshEnabled: true
     });
   } catch (e) {
-    console.warn("App Check failed to initialize, continuing without it:", e);
+    console.warn('App Check failed to initialize, continuing without it:', e);
   }
 }
 
-import { doc, getDocFromCache, getDocFromServer, enableNetwork, enableIndexedDbPersistence } from 'firebase/firestore';
+import { doc, getDocFromServer, enableNetwork, enableIndexedDbPersistence } from 'firebase/firestore';
 
 // Enable Persistence for local cache indexing (Resilience)
 if (typeof window !== 'undefined') {
@@ -55,22 +74,22 @@ async function testConnection() {
   try {
     // Attempt to proactively enable network just in case it was disabled by a failure
     await enableNetwork(db);
-    
+
     // Force a server fetch to test connectivity accurately
     const serverPromise = getDocFromServer(doc(db, 'products', 'connection_test'));
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Connectivity Timeout (15s)')), 15000));
-    
+
     await Promise.race([serverPromise, timeoutPromise]);
-    console.log("House of Daraja: Sovereign Data Link established.");
+    console.log('House of Daraja: Sovereign Data Link established.');
   } catch (error: any) {
     const errorMessage = error?.message || String(error);
     if (errorMessage.includes('offline') || errorMessage.includes('reach Cloud Firestore') || errorMessage.includes('Timeout')) {
-      console.error("Connectivity Protocol: Offline mode active. Operating using local archival cache.");
+      console.error('Connectivity Protocol: Offline mode active. Operating using local archival cache.');
     } else if (error?.code === 'permission-denied') {
       // If we get permission denied, it actually means we ARE connected, just restricted
-      console.log("House of Daraja: Sovereign Data Link verified (Protocol restricted).");
+      console.log('House of Daraja: Sovereign Data Link verified (Protocol restricted).');
     } else {
-      console.warn("Connection handshake unstable:", error);
+      console.warn('Connection handshake unstable:', error);
     }
   }
 }
@@ -107,7 +126,7 @@ export const handleFirestoreError = (error: any, op: FirestoreErrorInfo['operati
     logToSystem(LogLevel.CRITICAL, `Firewall Breach Attempt: ${op} on ${path}`, info);
     throw new Error(JSON.stringify(info));
   }
-  
+
   logToSystem(LogLevel.ERROR, `Database Breakdown: ${op} on ${path}`, info);
   throw error;
 };
