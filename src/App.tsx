@@ -34,6 +34,7 @@ const LinguisticNodeView = lazy(() => import('./views/LinguisticNodeView'));
 const WalletView = lazy(() => import('./views/WalletView'));
 const SellerStudioView = lazy(() => import('./views/SellerStudioView'));
 const LiveAuctionRoomView = lazy(() => import('./views/LiveAuctionRoomView'));
+const BrandBlueprintView = lazy(() => import('./views/BrandBlueprintView'));
 import { AnimatePresence, motion } from 'motion/react';
 import { ShoppingBag, Search, ShieldAlert, Sparkles } from 'lucide-react';
 import LanguageSelector from './components/LanguageSelector';
@@ -333,6 +334,7 @@ function AppContent() {
                     </ProtectedRoute>
                   } />
                   <Route path="/live-auction/:auctionId" element={<LiveAuctionRoomView />} />
+                  <Route path="/blueprint" element={<BrandBlueprintView />} />
                 </Routes>
               </AnimatePresence>
             </Suspense>
