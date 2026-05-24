@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf';
 import { Download } from 'lucide-react';
 
 const audience = [
@@ -23,7 +22,26 @@ const pipeline = [
   'Client renders selected language with RTL handling for Arabic',
 ];
 
-const buildPdf = () => {
+const routeMap = [
+  ['/', 'HomeView', 'Hero carousel + luxury feed'],
+  ['/marketplace', 'MarketplaceView', 'Vendor marketplace'],
+  ['/shop', 'ShopView', 'Curated internal storefront'],
+  ['/product/:id', 'ProductDetailView', 'Conversion-focused detail'],
+  ['/drops', 'DropView', 'Scarcity events and countdowns'],
+  ['/heritage', 'HeritageView', 'Archive-rich storytelling'],
+  ['/community', 'CommunityView', 'YouTube media archive bridge'],
+  ['/profile', 'ProfileView', 'Identity, tier, and rewards'],
+  ['/wallet', 'WalletView', 'Wallet + transaction ledger'],
+  ['/vendor/dashboard', 'VendorDashboardView', 'Vendor metrics'],
+  ['/admin/dashboard', 'AdminDashboardView', 'Moderation and controls'],
+  ['/atelier', 'AtelierPortalView', 'Personal tailoring entry point'],
+  ['/atelier/order', 'AtelierOrderWizardView', 'Measurement flow'],
+  ['/atelier/admin', 'AtelierAdminView', 'Production status tracking'],
+  ['/neural', 'LinguisticNodeView', 'AI translation + reasoning UI'],
+];
+
+const buildPdf = async () => {
+  const { jsPDF } = await import('jspdf');
   const doc = new jsPDF();
   let y = 16;
 
@@ -64,6 +82,8 @@ const buildPdf = () => {
 
   addTitle('Implementation Stack');
   addBody('Frontend: React + Vite. Backend: Firebase Auth + Firestore + Cloud Functions. AI Translation: OpenRouter/DeepSeek-compatible completion endpoint. Includes caching, fallback strategy, and analytics loop.');
+  addTitle('Application Route Structure');
+  routeMap.forEach(([path, view, purpose]) => addBody(`• ${path} → ${view}: ${purpose}`));
 
   doc.save('house-of-daraja-blueprint.pdf');
 };
@@ -114,6 +134,30 @@ export default function BrandBlueprintView() {
                 <p className="text-text/90">Focus: {screen.focus}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h2 className="text-2xl font-semibold text-gold mb-4">Full App Route Blueprint</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-gold/20 text-gold">
+                  <th className="py-2 pr-4">Route</th>
+                  <th className="py-2 pr-4">View</th>
+                  <th className="py-2">Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                {routeMap.map(([path, view, purpose]) => (
+                  <tr key={path} className="border-b border-white/10">
+                    <td className="py-2 pr-4 font-mono text-xs">{path}</td>
+                    <td className="py-2 pr-4">{view}</td>
+                    <td className="py-2 text-text/80">{purpose}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       </div>

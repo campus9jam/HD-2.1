@@ -359,6 +359,7 @@ function AppContent() {
                            <li className="hover:text-gold transition-colors cursor-pointer">Heritage Archive</li>
                            <li className="hover:text-gold transition-colors cursor-pointer">Global Trade</li>
                           <li><Link to="/neural" className="hover:text-gold transition-colors cursor-pointer">Neural Link</Link></li>
+                          <li><Link to="/blueprint" className="hover:text-gold transition-colors cursor-pointer">Blueprint</Link></li>
                         </ul>
                      </div>
                      <div className="space-y-4">
