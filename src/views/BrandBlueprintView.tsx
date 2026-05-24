@@ -40,6 +40,26 @@ const routeMap = [
   ['/neural', 'LinguisticNodeView', 'AI translation + reasoning UI'],
 ];
 
+const techStack = [
+  'Frontend: React 18 + Vite SPA + TypeScript',
+  'Backend: Node.js + Express API server',
+  'Styling: Tailwind CSS v4 + motion animations',
+  'Routing: react-router-dom with HashRouter',
+  'Data/Auth: Firebase + Firestore',
+  'Offline cache: Dexie / dexie-react-hooks',
+  'AI: OpenRouter + Google GenAI adapters',
+  'Media bridge: rss-parser for YouTube RSS proxy',
+];
+
+const imageRefs = [
+  'https://i.imgur.com/7QFYTZJ.png',
+  'https://i.imgur.com/MA123T4.png',
+  'https://i.imgur.com/S4l7lKP.png',
+  'https://i.imgur.com/jNv9WE7.png',
+  'https://i.imgur.com/2Xkwv9Y.png',
+  'https://i.imgur.com/Fy9UYJ4.png',
+];
+
 const buildPdf = async () => {
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF();
@@ -81,9 +101,11 @@ const buildPdf = async () => {
   pipeline.forEach((step, i) => addBody(`${i + 1}. ${step}`));
 
   addTitle('Implementation Stack');
-  addBody('Frontend: React + Vite. Backend: Firebase Auth + Firestore + Cloud Functions. AI Translation: OpenRouter/DeepSeek-compatible completion endpoint. Includes caching, fallback strategy, and analytics loop.');
+  techStack.forEach((item) => addBody(`• ${item}`));
   addTitle('Application Route Structure');
   routeMap.forEach(([path, view, purpose]) => addBody(`• ${path} → ${view}: ${purpose}`));
+  addTitle('Embedded Visual References');
+  imageRefs.forEach((src) => addBody(`• ${src}`));
 
   doc.save('house-of-daraja-blueprint.pdf');
 };
@@ -159,6 +181,23 @@ export default function BrandBlueprintView() {
               </tbody>
             </table>
           </div>
+        </section>
+
+        <section className="grid md:grid-cols-2 gap-6">
+          <article className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <h2 className="text-2xl font-semibold text-gold mb-4">Technology Stack</h2>
+            <ul className="space-y-2 list-disc ml-6 text-text/85">
+              {techStack.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </article>
+          <article className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <h2 className="text-2xl font-semibold text-gold mb-4">Embedded Image References</h2>
+            <ul className="space-y-2 text-text/85">
+              {imageRefs.map((src) => (
+                <li key={src} className="break-all text-xs md:text-sm">{src}</li>
+              ))}
+            </ul>
+          </article>
         </section>
       </div>
     </main>
